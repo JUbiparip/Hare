@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DPM Metals – Betonara Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a5c;
+    --accent:  #e8a020;
+    --green:   #27ae60;
+    --red:     #e74c3c;
+    --orange:  #f39c12;
+    --bg:      #f0f2f5;
+    --card:    #ffffff;
+    --border:  #dde3ea;
+    --text:    #2c3e50;
+    --muted:   #7f8c8d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+  header { background: var(--primary); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  header .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; }
+  header .logo span { color: var(--accent); }
+  header .subtitle { font-size: .85rem; opacity: .75; }
+  header .header-right { display: flex; align-items: center; gap: 14px; }
+  header .date-badge { background: var(--accent); color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: .9rem; }
+  header .btn-reset { background: var(--red); color: #fff; border: none; padding: 7px 16px; border-radius: 20px; font-weight: 700; font-size: .85rem; cursor: pointer; transition: background .2s; }
+  header .btn-reset:hover { background: #c0392b; }
+
+  .tabs { display: flex; background: var(--primary); padding: 0 20px; gap: 2px; flex-wrap: wrap; }
+  .tab-btn { padding: 10px 15px; border: none; background: transparent; color: rgba(255,255,255,.65); cursor: pointer; font-size: .84rem; font-weight: 600; border-bottom: 3px solid transparent; transition: all .2s; white-space: nowrap; }
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn.excel-btn { margin-left: auto; color: #a8e6c0; }
+  .tab-btn.excel-btn:hover { color: #fff; }
+
+  .container { max-width: 1440px; margin: 0 auto; padding: 24px 20px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); display: flex; align-items: center; gap: 8px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
+  @media(max-width:1000px) { .grid-2,.grid-3,.grid-4,.grid-5 { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:600px)  { .grid-2,.grid-3,.grid-4,.grid-5 { grid-template-columns: 1fr; } }
+
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+  input[type=number], input[type=text], input[type=date], select {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 7px;
+    font-size: .95rem; color: var(--text); background: #fafbfc; transition: border-color .2s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); background: #fff; }
+  input[readonly] { background: #f0f2f5; color: var(--muted); cursor: not-allowed; }
+
+  .btn { padding: 10px 22px; border: none; border-radius: 7px; font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #254d7a; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .btn-accent:hover { background: #c8880e; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #1e8449; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-sm { padding: 5px 12px; font-size: .8rem; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+  .kpi-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 18px 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .kpi-label { font-size: .78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.9rem; font-weight: 800; color: var(--primary); }
+  .kpi-unit { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.orange .kpi-value { color: var(--orange); }
+  .kpi-card.red .kpi-value { color: var(--red); }
+
+  .stock-item { margin-bottom: 16px; }
+  .stock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .stock-name { font-weight: 600; font-size: .9rem; }
+  .stock-qty { font-size: .85rem; color: var(--muted); }
+  .progress-bar { height: 14px; background: #e8ecf0; border-radius: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 6px; transition: width .5s ease; }
+  .fill-green { background: var(--green); }
+  .fill-orange { background: var(--orange); }
+  .fill-red { background: var(--red); }
+  .stock-alert { font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .alert-ok   { background: #d5f5e3; color: var(--green); }
+  .alert-warn { background: #fef9e7; color: var(--orange); }
+  .alert-crit { background: #fdecea; color: var(--red); }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .data-table th { background: var(--primary); color: #fff; padding: 9px 10px; text-align: left; font-weight: 600; font-size: .76rem; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+  .data-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .data-table tr:hover td { background: #f7f9fc; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: .75rem; font-weight: 700; }
+  .badge-beton { background: #d6eaf8; color: #1a5276; }
+  .badge-crf   { background: #d5f5e3; color: #1e8449; }
+  .badge-rehab { background: #fdebd0; color: #784212; }
+
+  .notif { padding: 12px 18px; border-radius: 8px; margin-bottom: 10px; font-size: .88rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .notif-warn { background: #fef9e7; border-left: 4px solid var(--orange); color: #7d6608; }
+  .notif-crit { background: #fdecea; border-left: 4px solid var(--red); color: #922b21; }
+  .notif-ok   { background: #d5f5e3; border-left: 4px solid var(--green); color: #1e8449; }
+
+  .section-divider { height: 1px; background: var(--border); margin: 18px 0; }
+
+  .rec-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  .rec-table th { background: #f0f2f5; color: var(--primary); padding: 9px 12px; text-align: center; font-weight: 700; border: 1px solid var(--border); font-size: .8rem; }
+  .rec-table td { padding: 8px 10px; border: 1px solid var(--border); text-align: center; }
+  .rec-table input[type=number] { width: 90px; text-align: center; padding: 6px 8px; }
+  .rec-table tr:nth-child(even) td { background: #fafbfc; }
+  .rec-table td:first-child { font-weight: 700; text-align: left; background: #f7f9fc; }
+
+  .highlight-row td { background: #fffbf0 !important; font-weight: 700; }
+
+  .info-box { background: #eaf4fb; border-left: 4px solid #2980b9; padding: 10px 14px; border-radius: 6px; font-size: .84rem; color: #1a5276; margin-bottom: 14px; }
+  .warn-box  { background: #fef9e7; border-left: 4px solid var(--orange); padding: 10px 14px; border-radius: 6px; font-size: .84rem; color: #7d6608; margin-bottom: 14px; }
+
+  .cap-bar-wrap { margin-top: 4px; }
+  .cap-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 3px; }
+
+  /* Editable preview table */
+  .preview-input {
+    width: 100%; padding: 4px 7px; border: 1.5px solid var(--border); border-radius: 5px;
+    font-size: .84rem; color: var(--text); background: #fff; text-align: right;
+  }
+  .preview-input:focus { outline: none; border-color: var(--accent); }
+  .preview-input.modified { border-color: var(--orange); background: #fffbf0; }
+
+  /* Stanje materijala cards */
+  .mat-state-card {
+    background: var(--card); border-radius: 10px; border: 1px solid var(--border);
+    padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .mat-state-name { font-size: .85rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
+  .mat-state-row { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 5px; }
+  .mat-state-row span:first-child { color: var(--muted); }
+  .mat-state-row span:last-child { font-weight: 700; }
+  .mat-state-total { margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .mat-state-total-label { font-size: .82rem; font-weight: 700; color: var(--primary); }
+  .mat-state-total-val { font-size: 1.2rem; font-weight: 800; }
+  .val-green  { color: var(--green); }
+  .val-orange { color: var(--orange); }
+  .val-red    { color: var(--red); }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:10000; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; }
+  .modal-box { background:#fff; border-radius:12px; padding:32px 36px; max-width:440px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,.25); text-align:center; }
+  .modal-box h2 { color:var(--red); font-size:1.3rem; margin-bottom:12px; }
+  .modal-box p { color:var(--text); font-size:.92rem; margin-bottom:22px; line-height:1.6; }
+  .modal-btns { display:flex; gap:12px; justify-content:center; }
+
+
+
+  .week-nav { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .week-nav .week-label { font-weight:700; font-size:.95rem; color:var(--primary); min-width:260px; }
+  .week-nav button { padding:6px 14px; border:1.5px solid var(--border); background:#fff; border-radius:6px; cursor:pointer; font-size:.85rem; font-weight:600; color:var(--primary); transition:all .2s; }
+  .week-nav button:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .week-nav .week-num { background:var(--accent); color:#fff; padding:3px 10px; border-radius:12px; font-size:.82rem; font-weight:700; }
+  .chart-wrap { position:relative; }
+  .chart-filter { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+  .chart-filter .form-group { margin:0; min-width:140px; }
+  .dev-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  .dev-table th { background:var(--primary); color:#fff; padding:8px 10px; text-align:left; font-size:.74rem; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+  .dev-table td { padding:7px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .dev-table tr:hover td { background:#f7f9fc; }
+  .dev-table tr:last-child td { border-bottom:none; }
+  .best-badge  { background:#d5f5e3; color:var(--green); padding:2px 8px; border-radius:10px; font-size:.74rem; font-weight:700; }
+  .worst-badge { background:#fdecea; color:var(--red);   padding:2px 8px; border-radius:10px; font-size:.74rem; font-weight:700; }
+  .dev-ok  { color:var(--green); font-weight:700; }
+  .dev-pos { color:var(--orange); font-weight:700; }
+  .dev-neg { color:var(--red); font-weight:700; }
+  .rastur-summary { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:12px; margin-bottom:16px; }
+  .rastur-card { background:#f7f9fc; border:1.5px solid var(--border); border-radius:8px; padding:12px 14px; }
+  .rastur-card .rc-label { font-size:.75rem; color:var(--muted); font-weight:600; text-transform:uppercase; margin-bottom:4px; }
+  .rastur-card .rc-proj  { font-size:.85rem; color:var(--primary); font-weight:600; }
+  .rastur-card .rc-real  { font-size:.95rem; font-weight:800; }
+  .rastur-card .rc-diff  { font-size:.78rem; margin-top:3px; font-weight:700; }
+  .rc-over  { color:var(--red); }
+  .rc-under { color:var(--green); }
+  .rc-exact { color:var(--muted); }
+
+  /* Operateri */
+  .op-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+  .op-card { background:#f7f9fc; border:1.5px solid var(--border); border-radius:8px; padding:12px 14px; display:flex; align-items:center; gap:10px; }
+  .op-avatar { width:38px; height:38px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.95rem; flex-shrink:0; }
+  .op-name { font-size:.9rem; font-weight:600; color:var(--text); flex:1; }
+  .op-card input[type=text] { padding:5px 8px; font-size:.88rem; }
+  .op-del { background:none; border:none; color:var(--red); cursor:pointer; font-size:1rem; padding:2px 6px; }
+  .op-del:hover { color:#c0392b; }
+
+  /* Charts */
+  .chart-wrap { position:relative; height:320px; }
+  .chart-filter { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+  .chart-filter .form-group { margin:0; min-width:140px; }
+
+  #toast { position:fixed; bottom:30px; right:30px; background:var(--primary); color:#fff; padding:12px 22px; border-radius:8px; font-size:.9rem; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.2); opacity:0; transition:opacity .3s; z-index:9999; }
+  #toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">DPM <span>Metals</span> &nbsp;|&nbsp; Betonara Tracker</div>
+    <div class="subtitle">Dnevni pregled proizvodnje, potrošnje i zaliha</div>
+  </div>
+  <div class="header-right">
+    <div class="date-badge" id="headerDate"></div>
+    <button class="btn-reset" onclick="showResetModal()">🗑️ RESET</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active"  onclick="switchTab('traker',this)">📊 Traker</button>
+  <button class="tab-btn"         onclick="switchTab('unos',this)">✏️ Unos Proizvodnje</button>
+  <button class="tab-btn"         onclick="switchTab('ulaz',this)">📦 Unos Ulaza (BPU)</button>
+  <button class="tab-btn"         onclick="switchTab('zalihe',this)">🏭 Zalihe (BPZ)</button>
+  <button class="tab-btn"         onclick="switchTab('stanje',this)">📊 Stanje Materijala</button>
+  <button class="tab-btn"         onclick="switchTab('receptura',this)">⚗️ Receptura (BPR)</button>
+  <button class="tab-btn"         onclick="switchTab('historija',this)">📋 Historija (BPP)</button>
+  <button class="tab-btn excel-btn" onclick="exportAllExcel()">📥 Sve baze (Excel)</button>
+</div>
+
+<div class="container">
+
+<!-- ═══ TAB: TRAKER ═══ -->
+<div id="tab-traker" class="tab-content active">
+  <div class="grid-5" style="margin-bottom:20px;">
+    <div class="kpi-card" id="kpi-beton"><div class="kpi-label">Beton danas</div><div class="kpi-value" id="kv-beton">0</div><div class="kpi-unit">m³</div></div>
+    <div class="kpi-card" id="kpi-crf"><div class="kpi-label">CRF danas</div><div class="kpi-value" id="kv-crf">0</div><div class="kpi-unit">tura</div></div>
+    <div class="kpi-card" id="kpi-crf-m3"><div class="kpi-label">CRF (m³)</div><div class="kpi-value" id="kv-crf-m3">0</div><div class="kpi-unit">m³</div></div>
+    <div class="kpi-card" id="kpi-rehab"><div class="kpi-label">Rehab danas</div><div class="kpi-value" id="kv-rehab">0</div><div class="kpi-unit">m³</div></div>
+    <div class="kpi-card" id="kpi-ukupno"><div class="kpi-label">Ukupno m³ ekv.</div><div class="kpi-value" id="kv-ukupno">0</div><div class="kpi-unit">m³</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🧪 Dnevna Potrošnja Materijala</div>
+      <table class="data-table">
+        <thead><tr><th>Materijal</th><th>Jed.</th><th>Potrošnja</th><th>Dostava</th><th>Bilans</th></tr></thead>
+        <tbody id="tbody-potrosnja"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">🏗️ Stanje Zaliha</div>
+      <div id="stock-bars"></div>
+      <div id="stock-alerts" style="margin-top:14px;"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📈 Poređenje – Danas vs. Prethodni Dan</div>
+    <div id="compare-section"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📅 Sedmični Pregled Proizvodnje</div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>Datum</th><th>Dan</th><th>Beton (m³)</th><th>CRF (tura)</th><th>CRF (m³)</th><th>Rehab (m³)</th>
+          <th>Ag 0-4 (kg)</th><th>Ag 4-8 (kg)</th><th>Cement (kg)</th>
+          <th>Splast (L)</th><th>Akceler (L)</th><th>Retarder (L)</th><th>Fiber (kg)</th>
+        </tr></thead>
+        <tbody id="tbody-sedmica"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GRAFIKON OPERATERI -->
+  <div class="card">
+    <div class="card-title">📊 Prskani Mlazni Beton po Operateru</div>
+    <div class="chart-filter">
+      <div class="form-group"><label>Od datuma</label><input type="date" id="ch-beton-od" onchange="renderCharts()"></div>
+      <div class="form-group"><label>Do datuma</label><input type="date" id="ch-beton-do" onchange="renderCharts()"></div>
+      <button class="btn btn-primary btn-sm" onclick="resetChartFilter('beton')">Resetuj</button>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-beton"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 CRF po Operateru</div>
+    <div class="chart-filter">
+      <div class="form-group"><label>Od datuma</label><input type="date" id="ch-crf-od" onchange="renderCharts()"></div>
+      <div class="form-group"><label>Do datuma</label><input type="date" id="ch-crf-do" onchange="renderCharts()"></div>
+      <button class="btn btn-primary btn-sm" onclick="resetChartFilter('crf')">Resetuj</button>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-crf"></canvas></div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB: UNOS PROIZVODNJE ═══ -->
+<div id="tab-unos" class="tab-content">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">✏️ Unos Dnevne Proizvodnje</div>
+      <div class="form-group"><label>Datum</label><input type="date" id="inp-datum" oninput="renderLivePreview()"></div>
+      <div class="form-group"><label>Smjena</label>
+        <select id="inp-smjena"><option value="DS">DS – Dnevna smjena</option><option value="NS">NS – Noćna smjena</option></select>
+      </div>
+      <div class="form-group"><label>Radilište</label><input type="text" id="inp-radiliste" placeholder="npr. Tunel A, Deponija..."></div>
+      <div class="section-divider"></div>
+      <div class="form-group"><label>🟦 Beton (m³)</label><input type="number" id="inp-beton" min="0" step="0.1" placeholder="0.0" oninput="renderLivePreview()"></div>
+      <div class="form-group">
+        <label>🟩 CRF (broj tura)</label>
+        <input type="number" id="inp-crf" min="0" step="1" placeholder="0" oninput="renderLivePreview()">
+        <div style="margin-top:6px;font-size:.82rem;color:var(--accent);font-weight:600;" id="crf-m3-hint"></div>
+      </div>
+      <div class="form-group"><label>🟧 Rehab (m³)</label><input type="number" id="inp-rehab" min="0" step="0.1" placeholder="0.0" oninput="renderLivePreview()"></div>
+      <div class="form-group"><label>Operater</label><select id="inp-operater"><option value="">-- Odaberi operatera --</option></select></div>
+      <div class="btn-row">
+        <button class="btn btn-accent" onclick="unosProizvodnje()">💾 Spremi Unos</button>
+        <button class="btn btn-primary" onclick="clearUnosForm()">🗑️ Očisti</button>
+      </div>
+    </div>
+
+    <!-- LIVE PREVIEW – EDITABLE -->
+    <div class="card">
+      <div class="card-title">🔍 Pregled Potrošnje (Live Preview – Editabilno)</div>
+      <div class="info-box">Izračunate vrijednosti možete <strong>ručno korigovati</strong> direktno u tabeli. Izmijenjene vrijednosti bit će sačuvane klikom na <strong>Spremi Unos</strong>.</div>
+      <div style="overflow-x:auto;">
+      <table class="data-table" id="tbl-preview">
+        <thead>
+          <tr>
+            <th>Materijal</th><th>Jed.</th>
+            <th>Beton<br><small style="font-weight:400;text-transform:none;">editabilno</small></th>
+            <th>CRF<br><small style="font-weight:400;text-transform:none;">editabilno</small></th>
+            <th>Rehab<br><small style="font-weight:400;text-transform:none;">editabilno</small></th>
+            <th>UKUPNO</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-preview"></tbody>
+      </table>
+      </div>
+      <div class="section-divider"></div>
+      <div class="card-title" style="margin-top:0;">📦 Prognoza Zaliha Nakon Unosa</div>
+      <div id="preview-stock"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: UNOS ULAZA (BPU) ═══ -->
+<div id="tab-ulaz" class="tab-content">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📦 Unos Dostave Materijala (BPU)</div>
+      <div class="info-box">
+        <strong>Agregat 0-4 mm:</strong> 1 kamion = 2.600 kg/m³ × 24 m³ = <strong>62.400 kg</strong><br>
+        <strong>Agregat 4-8 mm:</strong> 1 kamion = 2.700 kg/m³ × 24 m³ = <strong>64.800 kg</strong><br>
+        Cement, Splast, Akceler, Retarder, Fiber – unos preciznog broja.
+      </div>
+      <div class="form-group"><label>Datum</label><input type="date" id="bpu-datum"></div>
+      <div class="form-group">
+        <label>Materijal</label>
+        <select id="bpu-materijal" onchange="onBPUMaterialChange()">
+          <option value="Agregat 0-4 mm">Agregat 0-4 mm</option>
+          <option value="Agregat 4-8 mm">Agregat 4-8 mm</option>
+          <option value="Cement">Cement</option>
+          <option value="Superplastifikator">Superplastifikator</option>
+          <option value="Akcelerator">Akcelerator</option>
+          <option value="Retarder">Retarder</option>
+          <option value="Fiber">Fiber</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="bpu-kol-label">Količina po jedinici</label>
+        <input type="number" id="bpu-kolicina" min="0" placeholder="0" oninput="calcBPUTotal()">
+        <div style="margin-top:5px;font-size:.8rem;color:var(--muted);" id="bpu-kol-hint"></div>
+      </div>
+      <div class="form-group">
+        <label id="bpu-kom-label">Broj komada / kamiona</label>
+        <input type="number" id="bpu-kom" min="0" value="1" oninput="calcBPUTotal()">
+      </div>
+      <div class="form-group">
+        <label id="bpu-total-label">Ukupno zaprimljeno – automatski</label>
+        <input type="number" id="bpu-total" readonly>
+      </div>
+      <div class="form-group"><label>Operater koji je zaprimio</label><select id="bpu-operater"><option value="">-- Odaberi operatera --</option></select></div>
+      <div class="btn-row">
+        <button class="btn btn-accent" onclick="unosBPU()">💾 Spremi Dostavu</button>
+        <button class="btn btn-primary" onclick="clearBPUForm()">🗑️ Očisti</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Evidencija Dostava (BPU)</div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>Dan</th><th>Datum</th><th>Materijal</th><th>Kol/jed</th><th>Jed.</th><th>Kom</th><th>Total</th><th>Jed.</th><th>Operater</th><th></th></tr></thead>
+          <tbody id="tbody-bpu"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: ZALIHE (BPZ) ═══ -->
+<div id="tab-zalihe" class="tab-content">
+  <div class="card">
+    <div class="card-title">🏭 Unos Trenutnog Stanja Zaliha (BPZ)</div>
+    <div class="info-box">
+      Unesite <strong>trenutno fizičko stanje</strong> zaliha. Ovaj unos postaje nova osnova za sve kalkulacije.<br>
+      <strong>Agregati</strong> se unose kao broj kamiona (automatski preračun). <strong>Ostali materijali</strong> – precizni broj.
+    </div>
+    <div class="form-group"><label>Datum popisa zaliha</label><input type="date" id="bpz-datum"></div>
+
+    <div class="grid-2" style="margin-bottom:14px;">
+      <!-- AG 0-4 -->
+      <div class="mat-state-card">
+        <div class="mat-state-name">Agregat 0-4 mm</div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>Broj kamiona</label>
+          <input type="number" id="bpz-ag04-kam" min="0" value="0" oninput="calcBPZAg('ag04')">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Ukupno (kg) – automatski</label>
+          <input type="number" id="bpz-ag04" readonly>
+        </div>
+        <div class="cap-bar-wrap" style="margin-top:8px;">
+          <div class="cap-label"><span id="cap-ag04-lbl">0 kg</span><span>Max: 624.000 kg</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-green" id="cap-ag04" style="width:0%"></div></div>
+        </div>
+      </div>
+      <!-- AG 4-8 -->
+      <div class="mat-state-card">
+        <div class="mat-state-name">Agregat 4-8 mm</div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>Broj kamiona</label>
+          <input type="number" id="bpz-ag48-kam" min="0" value="0" oninput="calcBPZAg('ag48')">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Ukupno (kg) – automatski</label>
+          <input type="number" id="bpz-ag48" readonly>
+        </div>
+        <div class="cap-bar-wrap" style="margin-top:8px;">
+          <div class="cap-label"><span id="cap-ag48-lbl">0 kg</span><span>Max: 324.000 kg</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-green" id="cap-ag48" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="form-group">
+        <label>Cement (kg)</label>
+        <input type="number" id="bpz-cem" min="0" placeholder="0" oninput="updateBPZCemCap()">
+        <div class="cap-bar-wrap">
+          <div class="cap-label"><span id="cap-cem-lbl">0 kg</span><span>Max: 90.000 kg</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-green" id="cap-cem" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="form-group"><label>Superplastifikator (L)</label><input type="number" id="bpz-splast" min="0" placeholder="0"></div>
+      <div class="form-group"><label>Akcelerator (L)</label><input type="number" id="bpz-akceler" min="0" placeholder="0"></div>
+      <div class="form-group"><label>Retarder (L)</label><input type="number" id="bpz-retarder" min="0" placeholder="0"></div>
+      <div class="form-group"><label>Fiber (kg)</label><input type="number" id="bpz-fiber" min="0" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label>Napomena</label><input type="text" id="bpz-napomena" placeholder="npr. Jutarnji popis zaliha"></div>
+    <div class="btn-row">
+      <button class="btn btn-accent" onclick="saveBPZ()">💾 Sačuvaj Stanje Zaliha</button>
+      <button class="btn btn-primary" onclick="clearBPZForm()">🗑️ Očisti</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 Historija Popisa Zaliha (BPZ)</div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>Datum</th><th>Dan</th>
+          <th>Ag 0-4 (kg)</th><th>Ag 4-8 (kg)</th><th>Cement (kg)</th>
+          <th>Splast (L)</th><th>Akceler (L)</th><th>Retarder (L)</th><th>Fiber (kg)</th>
+          <th>Napomena</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-bpz"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: STANJE MATERIJALA ═══ -->
+<div id="tab-stanje" class="tab-content">
+  <div class="card">
+    <div class="card-title">📊 Stanje Materijala – Trenutni Obračun</div>
+    <div class="info-box">
+      <strong>Formula:</strong> Stanje = (Zalihe BPZ + Ulaz BPU) − Potrošnja BPP<br>
+      Obračun se vrši od posljednjeg unosa zaliha (BPZ) do danas. Sve vrijednosti su kumulativne.
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+      <div class="form-group" style="margin:0;min-width:180px;">
+        <label>Datum obračuna</label>
+        <input type="date" id="stanje-datum" onchange="renderStanje()">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="renderStanje()">🔄 Osvježi</button>
+    </div>
+    <div class="grid-4" id="stanje-cards" style="margin-bottom:20px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Detaljan Pregled po Materijalu</div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>Materijal</th><th>Jed.</th>
+          <th>Početno stanje (BPZ)</th>
+          <th>Ulaz (BPU)</th>
+          <th>Potrošnja (BPP)</th>
+          <th>Trenutno stanje</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="tbody-stanje"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Dnevni Pregled Stanja (zadnjih 7 dana)</div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>Datum</th><th>Dan</th>
+          <th>Ag 0-4 (kg)</th><th>Ag 4-8 (kg)</th><th>Cement (kg)</th>
+          <th>Splast (L)</th><th>Akceler (L)</th><th>Retarder (L)</th><th>Fiber (kg)</th>
+        </tr></thead>
+        <tbody id="tbody-stanje-dnevno"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB: RECEPTURA (BPR) ═══ -->
+<div id="tab-receptura" class="tab-content">
+  <div class="card">
+    <div class="card-title">⚗️ Receptura po m³ (BPR) – Editabilna</div>
+    <div class="info-box">
+      Ag 0-4, Ag 4-8, Cement, Fiber → <strong>kg/m³</strong> &nbsp;|&nbsp; Superplastifikator, Akcelerator, Retarder → <strong>L/m³</strong>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="rec-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Tip</th>
+            <th>Ag 0-4<br><small>(kg/m³)</small></th>
+            <th>Ag 4-8<br><small>(kg/m³)</small></th>
+            <th>Cement<br><small>(kg/m³)</small></th>
+            <th>Splast<br><small>(L/m³)</small></th>
+            <th>Akceler<br><small>(L/m³)</small></th>
+            <th>Retarder<br><small>(L/m³)</small></th>
+            <th>Fiber<br><small>(kg/m³)</small></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-receptura"></tbody>
+      </table>
+    </div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-success" onclick="saveReceptura()">💾 Sačuvaj Recepturu</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🟩 CRF – Parametri Ture</div>
+    <div class="info-box">
+      <strong>Dnevna CRF (m³)</strong> = Broj tura × Proizvedena količina po turi<br>
+      <strong>Potrošnja cementa za CRF</strong> = Broj tura × 468 kg/m³ × 8 m³ (fiksni volumen ture)<br>
+      <strong>Ostali materijali CRF</strong> = Ukupno m³ × receptura CRF
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Količina po turi (m³) – npr. 3.7</label>
+        <input type="number" id="crf-kolicina-tura" min="0" step="0.1" value="3.7" oninput="updateCRFFormulaBox()">
+        <div style="font-size:.78rem;color:var(--muted);margin-top:4px;">Volumen jedne ture CRF mješavine</div>
+      </div>
+      <div class="form-group">
+        <label>Proizvedena količina po turi (m³) – npr. 23.3</label>
+        <input type="number" id="crf-proizvedena-tura" min="0" step="0.1" value="8" oninput="updateCRFFormulaBox()">
+        <div style="font-size:.78rem;color:var(--muted);margin-top:4px;">Stvarna isporučena količina po turi na radilištu</div>
+      </div>
+    </div>
+    <div class="info-box" id="crf-formula-box" style="margin-top:0;"></div>
+    <div class="btn-row">
+      <button class="btn btn-success" onclick="saveCRFParams()">💾 Sačuvaj CRF Parametre</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔔 Pragovi Upozorenja za Narudžbu</div>
+    <div class="grid-4">
+      <div class="form-group"><label>Ag 0-4 (kg)</label><input type="number" id="thr-ag04" min="0"></div>
+      <div class="form-group"><label>Ag 4-8 (kg)</label><input type="number" id="thr-ag48" min="0"></div>
+      <div class="form-group"><label>Cement (kg)</label><input type="number" id="thr-cem" min="0"></div>
+      <div class="form-group"><label>Splast (L)</label><input type="number" id="thr-splast" min="0"></div>
+      <div class="form-group"><label>Akceler (L)</label><input type="number" id="thr-akceler" min="0"></div>
+      <div class="form-group"><label>Retarder (L)</label><input type="number" id="thr-retarder" min="0"></div>
+      <div class="form-group"><label>Fiber (kg)</label><input type="number" id="thr-fiber" min="0"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-success" onclick="saveThresholds()">💾 Sačuvaj Pragove</button></div>
+  </div>
+
+  <!-- OPERATERI -->
+  <div class="card" id="card-operateri">
+    <div class="card-title">👷 Operateri</div>
+    <div class="info-box">Dodajte operatere koji se pojavljuju u padajućim listama pri unosu. Možete dodati neograničen broj operatera.</div>
+    <div class="op-grid" id="op-grid"></div>
+    <div class="btn-row">
+      <button class="btn btn-accent" onclick="addOperater()">➕ Dodaj Operatera</button>
+      <button class="btn btn-success" onclick="saveOperateri()">💾 Sačuvaj Operatere</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB: HISTORIJA (BPP) ═══ -->
+<div id="tab-historija" class="tab-content">
+  <div class="card">
+    <div class="card-title">📋 Baza Podataka Proizvodnje (BPP)</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+      <div class="form-group" style="margin:0;min-width:150px;"><label>Filter – Tip</label>
+        <select id="filter-tip" onchange="renderHistorija()">
+          <option value="">Svi tipovi</option>
+          <option value="Beton">Beton</option>
+          <option value="CRF">CRF</option>
+          <option value="Rehab">Rehab</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;min-width:150px;"><label>Od datuma</label><input type="date" id="filter-od" onchange="renderHistorija()"></div>
+      <div class="form-group" style="margin:0;min-width:150px;"><label>Do datuma</label><input type="date" id="filter-do" onchange="renderHistorija()"></div>
+      <button class="btn btn-primary btn-sm" onclick="clearFilters()">Resetuj filtere</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>Datum</th><th>Dan</th><th>Smjena</th><th>Radilište</th><th>Količina</th><th>Tip</th><th>CRF m³</th>
+          <th>Ag 0-4 (kg)</th><th>Ag 4-8 (kg)</th><th>Cement (kg)</th>
+          <th>Splast (L)</th><th>Akceler (L)</th><th>Retarder (L)</th><th>Fiber (kg)</th>
+          <th>Operater</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-historija"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;font-size:.82rem;color:var(--muted);" id="hist-summary"></div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- RESET MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <h2>⚠️ Potvrda Reseta</h2>
+    <p>Ova akcija će <strong>trajno obrisati sve unose</strong> iz:<br><br>
+    BPP (Proizvodnja) · BPU (Ulaz) · BPZ (Zalihe)<br><br>
+    Receptura i pragovi upozorenja <strong>neće biti obrisani</strong>.<br><br>
+    Jeste li sigurni?</p>
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="confirmReset()">🗑️ Da, obriši sve</button>
+      <button class="btn btn-primary" onclick="closeResetModal()">Odustani</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────
+const DAYS_BS   = ['Nedjelja','Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota'];
+const MONTHS_BS = ['januar','februar','mart','april','maj','juni','juli','august','septembar','oktobar','novembar','decembar'];
+const MAT_KEYS   = ['ag04','ag48','cem','splast','akceler','retarder','fiber'];
+const MAT_LABELS = ['Ag 0-4 mm','Ag 4-8 mm','Cement','Superplastifikator','Akcelerator','Retarder','Fiber'];
+const MAT_UNITS  = ['kg','kg','kg','L','L','L','kg'];
+const CAPACITIES = { ag04:624000, ag48:324000, cem:90000 };
+const AG04_KG_PER_KAMION = 2600 * 24; // 62400
+const AG48_KG_PER_KAMION = 2700 * 24; // 64800
+// CRF cement: broj_tura × 468 × 8
+const CRF_CEM_PER_TURA = 468 * 8; // 3744 kg per tura
+
+// ─── DATA ─────────────────────────────────────────────────
+function loadData(key, def) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):def; } catch(e) { return def; } }
+function saveData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+const DEFAULT_RECEPTURA = {
+  Beton: { ag04:1370, ag48:350, cem:440, splast:2,   akceler:15,  retarder:0, fiber:5 },
+  CRF:   { ag04:0,    ag48:0,   cem:468, splast:0,   akceler:0,   retarder:0, fiber:0 },
+  Rehab: { ag04:1370, ag48:350, cem:440, splast:2.6, akceler:15,  retarder:0, fiber:5 }
+};
+const DEFAULT_CRF_PARAMS  = { kolicinaTura:3.7, proizvedenaTura:8 };
+const DEFAULT_THRESHOLDS  = { ag04:20000, ag48:10000, cem:5000, splast:500, akceler:1000, retarder:200, fiber:100 };
+
+let receptura  = loadData('bpr_receptura',  DEFAULT_RECEPTURA);
+let crfParams  = loadData('bpr_crf_params', DEFAULT_CRF_PARAMS);
+let thresholds = loadData('bpr_thresholds', DEFAULT_THRESHOLDS);
+let bppData    = loadData('bpp_data', []);
+let bpuData    = loadData('bpu_data', []);
+let bpzData    = loadData('bpz_data', []);
+
+// Seed sample data
+if (bppData.length === 0) {
+  [{datum:'2026-06-04',tip:'Beton',kolicina:6},{datum:'2026-06-04',tip:'Beton',kolicina:2},
+   {datum:'2026-06-05',tip:'Beton',kolicina:4},{datum:'2026-06-06',tip:'Beton',kolicina:5},
+   {datum:'2026-06-07',tip:'CRF',kolicina:3.7},{datum:'2026-06-08',tip:'CRF',kolicina:3.7}
+  ].forEach((r,i)=>bppData.push({id:Date.now()+i,smjena:'DS',radiliste:'835',operater:'Dinko Bitici',...r}));
+  saveData('bpp_data',bppData);
+}
+if (bpuData.length === 0) {
+  bpuData=[
+    {id:1,datum:'2026-06-04',materijal:'Agregat 0-4 mm',kolicina:AG04_KG_PER_KAMION,kom:1,operater:'Dinko Bitici'},
+    {id:2,datum:'2026-06-04',materijal:'Agregat 4-8 mm',kolicina:AG48_KG_PER_KAMION,kom:1,operater:'Zijad Fejzic'},
+    {id:3,datum:'2026-06-04',materijal:'Cement',kolicina:22300,kom:2,operater:'Mirsad Sacic'},
+    {id:4,datum:'2026-06-04',materijal:'Superplastifikator',kolicina:950,kom:3,operater:'Edis Kovacevic'},
+    {id:5,datum:'2026-06-04',materijal:'Akcelerator',kolicina:950,kom:5,operater:'Muhamed Koprdza'},
+    {id:6,datum:'2026-06-04',materijal:'Retarder',kolicina:950,kom:0,operater:'Zaim Ahmedovic'},
+    {id:7,datum:'2026-06-04',materijal:'Fiber',kolicina:20,kom:15,operater:'Dinko Bitici'},
+  ];
+  saveData('bpu_data',bpuData);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function fmt(n,dec=0){ return (n||0).toLocaleString('bs-BA',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function fmtDate(d){ if(!d) return '-'; const dt=new Date(d+'T00:00:00'); return `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()}`; }
+function getDayName(d){ return DAYS_BS[new Date(d+'T00:00:00').getDay()]; }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function showToast(msg,dur=2800){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),dur); }
+function matNameToKey(name){
+  return {'Agregat 0-4 mm':'ag04','Agregat 4-8 mm':'ag48','Cement':'cem',
+    'Superplastifikator':'splast','Akcelerator':'akceler','Retarder':'retarder','Fiber':'fiber'}[name]||null;
+}
+
+// ─── CRF CALCULATION ──────────────────────────────────────
+// Dnevna CRF m³ = ture × proizvedenaTura  (prikazuje se u Trakeru)
+function crfTotalM3(ture){ return ture * crfParams.proizvedenaTura; }
+
+// Potrošnja cementa za CRF = ture × 468 × 8
+// Potrošnja ostalih materijala za CRF = crfTotalM3(ture) × receptura.CRF[k]
+function calcPotrosnja(beton, crfTure, rehab) {
+  const r = receptura;
+  const crfM3 = crfTotalM3(crfTure);
+  return {
+    ag04:     beton*r.Beton.ag04     + crfM3*r.CRF.ag04     + rehab*r.Rehab.ag04,
+    ag48:     beton*r.Beton.ag48     + crfM3*r.CRF.ag48     + rehab*r.Rehab.ag48,
+    // CRF cement: ture × 468 × 8; Beton i Rehab: m³ × receptura
+    cem:      beton*r.Beton.cem      + crfTure*CRF_CEM_PER_TURA + rehab*r.Rehab.cem,
+    splast:   beton*r.Beton.splast   + crfM3*r.CRF.splast   + rehab*r.Rehab.splast,
+    akceler:  beton*r.Beton.akceler  + crfM3*r.CRF.akceler  + rehab*r.Rehab.akceler,
+    retarder: beton*r.Beton.retarder + crfM3*r.CRF.retarder + rehab*r.Rehab.retarder,
+    fiber:    beton*r.Beton.fiber    + crfM3*r.CRF.fiber    + rehab*r.Rehab.fiber
+  };
+}
+
+// Per-column breakdown for live preview (so user sees each column separately)
+function calcPotrosnjaBreakdown(beton, crfTure, rehab) {
+  const r = receptura;
+  const crfM3 = crfTotalM3(crfTure);
+  return {
+    beton: {
+      ag04: beton*r.Beton.ag04, ag48: beton*r.Beton.ag48, cem: beton*r.Beton.cem,
+      splast: beton*r.Beton.splast, akceler: beton*r.Beton.akceler, retarder: beton*r.Beton.retarder, fiber: beton*r.Beton.fiber
+    },
+    crf: {
+      ag04: crfM3*r.CRF.ag04, ag48: crfM3*r.CRF.ag48,
+      cem: crfTure * CRF_CEM_PER_TURA,   // ← ISPRAVNA FORMULA
+      splast: crfM3*r.CRF.splast, akceler: crfM3*r.CRF.akceler, retarder: crfM3*r.CRF.retarder, fiber: crfM3*r.CRF.fiber
+    },
+    rehab: {
+      ag04: rehab*r.Rehab.ag04, ag48: rehab*r.Rehab.ag48, cem: rehab*r.Rehab.cem,
+      splast: rehab*r.Rehab.splast, akceler: rehab*r.Rehab.akceler, retarder: rehab*r.Rehab.retarder, fiber: rehab*r.Rehab.fiber
+    }
+  };
+}
+
+// ─── STOCK ────────────────────────────────────────────────
+function getLatestBPZ(upToDate){
+  const entries=bpzData.filter(r=>r.datum<=upToDate).sort((a,b)=>b.datum.localeCompare(a.datum));
+  return entries.length>0?entries[0]:null;
+}
+
+function computeStockDetailed(upToDate){
+  const snap=getLatestBPZ(upToDate);
+  let snapStock={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+  let fromDate='0000-00-00';
+  if(snap){ MAT_KEYS.forEach(k=>snapStock[k]=snap[k]||0); fromDate=snap.datum; }
+
+  let ulaz={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+  bpuData.forEach(r=>{
+    if(r.datum>fromDate&&r.datum<=upToDate){
+      const k=matNameToKey(r.materijal); if(k) ulaz[k]=(ulaz[k]||0)+r.kolicina*r.kom;
+    }
+  });
+
+  let potrosnja={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+  bppData.forEach(r=>{
+    if(r.datum>fromDate&&r.datum<=upToDate){
+      // Use saved overrides if present
+      if(r.potrosnjaOverride){
+        MAT_KEYS.forEach(k=>potrosnja[k]=(potrosnja[k]||0)+(r.potrosnjaOverride[k]||0));
+      } else {
+        const p=calcPotrosnja(r.tip==='Beton'?r.kolicina:0,r.tip==='CRF'?r.kolicina:0,r.tip==='Rehab'?r.kolicina:0);
+        MAT_KEYS.forEach(k=>potrosnja[k]=(potrosnja[k]||0)+(p[k]||0));
+      }
+    }
+  });
+
+  let stanje={};
+  MAT_KEYS.forEach(k=>stanje[k]=(snapStock[k]||0)+(ulaz[k]||0)-(potrosnja[k]||0));
+  return { snapStock, ulaz, potrosnja, stanje, fromDate, snapDatum: snap?snap.datum:null };
+}
+
+function computeStock(upToDate){
+  return computeStockDetailed(upToDate).stanje;
+}
+
+// ─── HEADER ───────────────────────────────────────────────
+function updateHeaderDate(){
+  const now=new Date();
+  document.getElementById('headerDate').textContent=`${DAYS_BS[now.getDay()]}, ${now.getDate()} ${MONTHS_BS[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+// ─── TABS ─────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='traker')    { renderTraker(); renderCharts(); renderWeekChart(); renderDeviationCharts(); refreshRasturOperaterSelect(); }
+  if(name==='receptura') { renderRecepturaTab(); renderOperateriGrid(); }
+  if(name==='historija') renderHistorija();
+  if(name==='ulaz')      renderBPU();
+  if(name==='zalihe')    renderBPZ();
+  if(name==='stanje')    renderStanje();
+}
+
+// ─── RESET ────────────────────────────────────────────────
+function showResetModal(){ document.getElementById('resetModal').classList.add('show'); }
+function closeResetModal(){ document.getElementById('resetModal').classList.remove('show'); }
+function confirmReset(){
+  bppData=[]; bpuData=[]; bpzData=[];
+  saveData('bpp_data',[]); saveData('bpu_data',[]); saveData('bpz_data',[]);
+  closeResetModal();
+  showToast('✅ Svi unosi su obrisani!');
+  renderTraker(); renderBPU(); renderBPZ(); renderHistorija();
+  if(document.getElementById('tab-stanje').classList.contains('active')) renderStanje();
+}
+
+// ─── TRAKER ───────────────────────────────────────────────
+function renderTraker(){
+  const today=todayStr();
+  const todayRecs=bppData.filter(r=>r.datum===today);
+  const beton  =todayRecs.filter(r=>r.tip==='Beton').reduce((s,r)=>s+r.kolicina,0);
+  const crfTure=todayRecs.filter(r=>r.tip==='CRF').reduce((s,r)=>s+r.kolicina,0);
+  const rehab  =todayRecs.filter(r=>r.tip==='Rehab').reduce((s,r)=>s+r.kolicina,0);
+  const crfM3  =crfTotalM3(crfTure);
+  const ukupno =beton+crfM3+rehab;
+
+  document.getElementById('kv-beton').textContent  =fmt(beton,1);
+  document.getElementById('kv-crf').textContent    =fmt(crfTure,0);
+  document.getElementById('kv-crf-m3').textContent =fmt(crfM3,1);
+  document.getElementById('kv-rehab').textContent  =fmt(rehab,1);
+  document.getElementById('kv-ukupno').textContent =fmt(ukupno,1);
+  ['kpi-beton','kpi-crf','kpi-crf-m3','kpi-rehab','kpi-ukupno'].forEach(id=>{
+    document.getElementById(id).className='kpi-card '+(ukupno>0?'green':'');
+  });
+
+  const pot=calcPotrosnja(beton,crfTure,rehab);
+  const todayDel={};
+  bpuData.filter(r=>r.datum===today).forEach(r=>{
+    const k=matNameToKey(r.materijal); if(k) todayDel[k]=(todayDel[k]||0)+r.kolicina*r.kom;
+  });
+  const tbodyP=document.getElementById('tbody-potrosnja');
+  tbodyP.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const p=pot[k]||0, d=todayDel[k]||0, bil=d-p;
+    tbodyP.innerHTML+=`<tr>
+      <td><strong>${MAT_LABELS[i]}</strong></td><td>${MAT_UNITS[i]}</td>
+      <td>${fmt(p,2)} ${MAT_UNITS[i]}</td>
+      <td>${fmt(d,2)} ${MAT_UNITS[i]}</td>
+      <td style="color:${bil>=0?'var(--green)':'var(--red)'};font-weight:700;">${bil>=0?'+':''}${fmt(bil,2)} ${MAT_UNITS[i]}</td>
+    </tr>`;
+  });
+
+  const stock=computeStock(today);
+  bpuData.filter(r=>r.datum===today).forEach(r=>{
+    const k=matNameToKey(r.materijal); if(k) stock[k]=(stock[k]||0)+r.kolicina*r.kom;
+  });
+  MAT_KEYS.forEach(k=>stock[k]=(stock[k]||0)-(pot[k]||0));
+
+  const stockBarsEl=document.getElementById('stock-bars');
+  const alertsEl=document.getElementById('stock-alerts');
+  stockBarsEl.innerHTML=''; alertsEl.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const val=Math.max(0,stock[k]||0);
+    const thr=thresholds[k]||0;
+    const cap=CAPACITIES[k]||Math.max(val*2,thr*4,1);
+    const pct=Math.min(100,(val/cap)*100);
+    let fillClass='fill-green',alertClass='alert-ok',alertTxt='OK';
+    if(val<thr)       { fillClass='fill-red';    alertClass='alert-crit'; alertTxt='NARUČI!'; }
+    else if(val<thr*2){ fillClass='fill-orange'; alertClass='alert-warn'; alertTxt='Nisko'; }
+    const capStr=CAPACITIES[k]?` / ${fmt(cap,0)} ${MAT_UNITS[i]}`:'';
+    stockBarsEl.innerHTML+=`<div class="stock-item">
+      <div class="stock-header">
+        <span class="stock-name">${MAT_LABELS[i]}</span>
+        <span class="stock-qty">${fmt(val,1)} ${MAT_UNITS[i]}${capStr} &nbsp;<span class="stock-alert ${alertClass}">${alertTxt}</span></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
+    </div>`;
+    if(val<thr)        alertsEl.innerHTML+=`<div class="notif notif-crit">⚠️ <strong>${MAT_LABELS[i]}</strong> – Kritično niska zaliha! (${fmt(val,1)} ${MAT_UNITS[i]})</div>`;
+    else if(val<thr*2) alertsEl.innerHTML+=`<div class="notif notif-warn">🔔 <strong>${MAT_LABELS[i]}</strong> – Niska zaliha (${fmt(val,1)} ${MAT_UNITS[i]})</div>`;
+  });
+  if(!alertsEl.innerHTML) alertsEl.innerHTML='<div class="notif notif-ok">✅ Sve zalihe su na zadovoljavajućem nivou.</div>';
+
+  const prev=new Date(today); prev.setDate(prev.getDate()-1);
+  const prevStr=prev.toISOString().slice(0,10);
+  const prevRecs=bppData.filter(r=>r.datum===prevStr);
+  const prevBeton=prevRecs.filter(r=>r.tip==='Beton').reduce((s,r)=>s+r.kolicina,0);
+  const prevCRF  =prevRecs.filter(r=>r.tip==='CRF').reduce((s,r)=>s+r.kolicina,0);
+  const prevRehab=prevRecs.filter(r=>r.tip==='Rehab').reduce((s,r)=>s+r.kolicina,0);
+  document.getElementById('compare-section').innerHTML=`
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:12px;">
+      <span style="display:inline-block;width:12px;height:12px;background:var(--accent);border-radius:2px;margin-right:5px;"></span>Danas (${fmtDate(today)})
+      &nbsp;&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#aab7c4;border-radius:2px;margin-right:5px;"></span>Jučer (${fmtDate(prevStr)})
+    </div>
+    ${compareBar('Beton (m³)',beton,prevBeton,'m³')}
+    ${compareBar('CRF (tura)',crfTure,prevCRF,'tura')}
+    ${compareBar('CRF (m³)',crfM3,crfTotalM3(prevCRF),'m³')}
+    ${compareBar('Rehab (m³)',rehab,prevRehab,'m³')}`;
+  renderSedmica();
+}
+
+function compareBar(label,today,prev,unit){
+  const maxV=Math.max(today,prev,1);
+  const pT=Math.round((today/maxV)*100), pP=Math.round((prev/maxV)*100);
+  const diff=today-prev;
+  const diffStr=diff===0?'=':diff>0?`▲ +${fmt(diff,1)}`:`▼ ${fmt(diff,1)}`;
+  const diffColor=diff>0?'var(--green)':diff<0?'var(--red)':'var(--muted)';
+  return `<div style="margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <span style="font-weight:600;font-size:.88rem;">${label}</span>
+      <span style="color:${diffColor};font-size:.85rem;font-weight:700;">${diffStr} ${unit}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <span style="width:60px;font-size:.78rem;color:var(--muted);">Danas</span>
+      <div style="flex:1;height:18px;background:#e8ecf0;border-radius:4px;overflow:hidden;">
+        <div style="width:${pT}%;height:100%;background:var(--accent);border-radius:4px;"></div></div>
+      <span style="width:60px;text-align:right;font-size:.82rem;font-weight:700;">${fmt(today,1)}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="width:60px;font-size:.78rem;color:var(--muted);">Jučer</span>
+      <div style="flex:1;height:18px;background:#e8ecf0;border-radius:4px;overflow:hidden;">
+        <div style="width:${pP}%;height:100%;background:#aab7c4;border-radius:4px;"></div></div>
+      <span style="width:60px;text-align:right;font-size:.82rem;font-weight:700;">${fmt(prev,1)}</span>
+    </div></div>`;
+}
+
+function renderSedmica(){
+  const days=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  const tbody=document.getElementById('tbody-sedmica');
+  tbody.innerHTML='';
+  days.forEach(day=>{
+    const recs=bppData.filter(r=>r.datum===day);
+    const beton=recs.filter(r=>r.tip==='Beton').reduce((s,r)=>s+r.kolicina,0);
+    const crf  =recs.filter(r=>r.tip==='CRF').reduce((s,r)=>s+r.kolicina,0);
+    const rehab=recs.filter(r=>r.tip==='Rehab').reduce((s,r)=>s+r.kolicina,0);
+    const crfM3=crfTotalM3(crf);
+    const pot  =calcPotrosnja(beton,crf,rehab);
+    tbody.innerHTML+=`<tr class="${day===todayStr()?'highlight-row':''}">
+      <td>${fmtDate(day)}</td><td>${getDayName(day)}</td>
+      <td>${fmt(beton,1)}</td><td>${fmt(crf,0)}</td><td>${fmt(crfM3,1)}</td><td>${fmt(rehab,1)}</td>
+      <td>${fmt(pot.ag04,0)}</td><td>${fmt(pot.ag48,0)}</td><td>${fmt(pot.cem,0)}</td>
+      <td>${fmt(pot.splast,2)}</td><td>${fmt(pot.akceler,2)}</td><td>${fmt(pot.retarder,2)}</td><td>${fmt(pot.fiber,2)}</td>
+    </tr>`;
+  });
+}
+
+// ─── UNOS PROIZVODNJE ─────────────────────────────────────
+// Store current preview overrides
+let previewOverrides = {};
+
+function renderLivePreview(){
+  const beton=parseFloat(document.getElementById('inp-beton').value)||0;
+  const crf  =parseFloat(document.getElementById('inp-crf').value)||0;
+  const rehab=parseFloat(document.getElementById('inp-rehab').value)||0;
+  const crfM3=crfTotalM3(crf);
+
+  // CRF hint – Traker style
+  const hintEl=document.getElementById('crf-m3-hint');
+  hintEl.textContent = crf>0 ? `${fmt(crf,0)} tura × ${crfParams.proizvedenaTura} m³/tura = ${fmt(crfM3,2)} m³ ukupno` : '';
+
+  const bd=calcPotrosnjaBreakdown(beton,crf,rehab);
+  previewOverrides={};
+
+  const tbody=document.getElementById('tbody-preview');
+  tbody.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const vB=bd.beton[k], vC=bd.crf[k], vR=bd.rehab[k];
+    const total=vB+vC+vR;
+    tbody.innerHTML+=`<tr>
+      <td><strong>${MAT_LABELS[i]}</strong></td>
+      <td>${MAT_UNITS[i]}</td>
+      <td><input class="preview-input" id="pv-beton-${k}" type="number" step="0.01" value="${vB.toFixed(2)}" oninput="onPreviewEdit('${k}')"></td>
+      <td><input class="preview-input" id="pv-crf-${k}"   type="number" step="0.01" value="${vC.toFixed(2)}" oninput="onPreviewEdit('${k}')"></td>
+      <td><input class="preview-input" id="pv-rehab-${k}" type="number" step="0.01" value="${vR.toFixed(2)}" oninput="onPreviewEdit('${k}')"></td>
+      <td id="pv-total-${k}" style="font-weight:700;">${fmt(total,2)}</td>
+    </tr>`;
+  });
+
+  renderPreviewStock();
+  setTimeout(renderRecVsStvarnoChart, 60);
+}
+
+function onPreviewEdit(k){
+  const vB=parseFloat(document.getElementById(`pv-beton-${k}`).value)||0;
+  const vC=parseFloat(document.getElementById(`pv-crf-${k}`).value)||0;
+  const vR=parseFloat(document.getElementById(`pv-rehab-${k}`).value)||0;
+  const total=vB+vC+vR;
+  document.getElementById(`pv-total-${k}`).textContent=fmt(total,2);
+  // Mark as modified
+  ['beton','crf','rehab'].forEach(t=>{
+    const el=document.getElementById(`pv-${t}-${k}`);
+    if(el) el.classList.add('modified');
+  });
+  renderPreviewStock();
+}
+
+function getPreviewTotals(){
+  // Returns per-material totals from preview inputs (may be overridden)
+  const totals={};
+  MAT_KEYS.forEach(k=>{
+    const vB=parseFloat(document.getElementById(`pv-beton-${k}`)?.value)||0;
+    const vC=parseFloat(document.getElementById(`pv-crf-${k}`)?.value)||0;
+    const vR=parseFloat(document.getElementById(`pv-rehab-${k}`)?.value)||0;
+    totals[k]=vB+vC+vR;
+  });
+  return totals;
+}
+
+function renderPreviewStock(){
+  const datum=document.getElementById('inp-datum').value||todayStr();
+  const stock=computeStock(datum);
+  bpuData.filter(r=>r.datum===datum).forEach(r=>{
+    const k=matNameToKey(r.materijal); if(k) stock[k]=(stock[k]||0)+r.kolicina*r.kom;
+  });
+  const totals=getPreviewTotals();
+  const psEl=document.getElementById('preview-stock');
+  psEl.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const before=Math.max(0,stock[k]||0);
+    const after =Math.max(0,before-(totals[k]||0));
+    const thr   =thresholds[k]||0;
+    const color =after<thr?'var(--red)':after<thr*2?'var(--orange)':'var(--green)';
+    psEl.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:.85rem;font-weight:600;">${MAT_LABELS[i]}</span>
+      <span style="font-size:.82rem;color:var(--muted);">${fmt(before,1)} ${MAT_UNITS[i]}</span>
+      <span>→</span>
+      <span style="font-size:.88rem;font-weight:700;color:${color};">${fmt(after,1)} ${MAT_UNITS[i]}</span>
+    </div>`;
+  });
+  setTimeout(renderRecVsStvarnoChart, 60);
+}
+
+function unosProizvodnje(){
+  const datum    =document.getElementById('inp-datum').value;
+  const smjena   =document.getElementById('inp-smjena').value;
+  const radiliste=document.getElementById('inp-radiliste').value.trim();
+  const beton    =parseFloat(document.getElementById('inp-beton').value)||0;
+  const crf      =parseFloat(document.getElementById('inp-crf').value)||0;
+  const rehab    =parseFloat(document.getElementById('inp-rehab').value)||0;
+  const operater =document.getElementById('inp-operater').value.trim();
+  if(!datum){ alert('Molimo unesite datum!'); return; }
+  if(beton===0&&crf===0&&rehab===0){ alert('Molimo unesite barem jednu količinu!'); return; }
+
+  // Collect preview overrides (combined totals per material)
+  const totals=getPreviewTotals();
+
+  const add=(tip,kolicina)=>{
+    if(kolicina>0){
+      // Build per-tip override from preview
+      const override={};
+      MAT_KEYS.forEach(k=>{
+        const el=document.getElementById(`pv-${tip.toLowerCase()}-${k}`);
+        override[k]=el?parseFloat(el.value)||0:0;
+      });
+      bppData.push({id:Date.now()+Math.random(),datum,smjena,radiliste,kolicina,tip,operater,potrosnjaOverride:override});
+    }
+  };
+  add('Beton',beton); add('CRF',crf); add('Rehab',rehab);
+  saveData('bpp_data',bppData);
+  showToast('✅ Unos uspješno sačuvan!');
+  clearUnosForm(); renderTraker(); renderWeekChart(); renderDeviationCharts();
+}
+
+function clearUnosForm(){
+  document.getElementById('inp-datum').value=todayStr();
+  document.getElementById('inp-smjena').value='DS';
+  ['inp-radiliste','inp-beton','inp-crf','inp-rehab','inp-operater'].forEach(id=>document.getElementById(id).value='');
+  renderLivePreview();
+}
+
+// ─── BPU ──────────────────────────────────────────────────
+function onBPUMaterialChange(){
+  const mat=document.getElementById('bpu-materijal').value;
+  const kolEl   =document.getElementById('bpu-kolicina');
+  const komLabel=document.getElementById('bpu-kom-label');
+  const kolLabel=document.getElementById('bpu-kol-label');
+  const hint    =document.getElementById('bpu-kol-hint');
+  const totLabel=document.getElementById('bpu-total-label');
+  const matKey  =matNameToKey(mat);
+  const unit    =matKey?MAT_UNITS[MAT_KEYS.indexOf(matKey)]:'kg';
+
+  if(mat==='Agregat 0-4 mm'){
+    kolEl.value=AG04_KG_PER_KAMION; kolEl.readOnly=true;
+    kolLabel.textContent='Količina po kamionu (kg) – automatski';
+    komLabel.textContent='Broj kamiona';
+    hint.textContent=`2.600 kg/m³ × 24 m³ = ${fmt(AG04_KG_PER_KAMION,0)} kg po kamionu`;
+    totLabel.textContent='Ukupno zaprimljeno (kg) – automatski';
+  } else if(mat==='Agregat 4-8 mm'){
+    kolEl.value=AG48_KG_PER_KAMION; kolEl.readOnly=true;
+    kolLabel.textContent='Količina po kamionu (kg) – automatski';
+    komLabel.textContent='Broj kamiona';
+    hint.textContent=`2.700 kg/m³ × 24 m³ = ${fmt(AG48_KG_PER_KAMION,0)} kg po kamionu`;
+    totLabel.textContent='Ukupno zaprimljeno (kg) – automatski';
+  } else {
+    kolEl.readOnly=false; kolEl.value='';
+    kolLabel.textContent=`Količina po jedinici (${unit})`;
+    komLabel.textContent='Broj komada / paleta';
+    hint.textContent='';
+    totLabel.textContent=`Ukupno zaprimljeno (${unit}) – automatski`;
+  }
+  calcBPUTotal();
+}
+
+function calcBPUTotal(){
+  const kol=parseFloat(document.getElementById('bpu-kolicina').value)||0;
+  const kom=parseFloat(document.getElementById('bpu-kom').value)||0;
+  document.getElementById('bpu-total').value=kol*kom;
+}
+
+function unosBPU(){
+  const datum    =document.getElementById('bpu-datum').value;
+  const mat      =document.getElementById('bpu-materijal').value;
+  const kolicina =parseFloat(document.getElementById('bpu-kolicina').value)||0;
+  const kom      =parseFloat(document.getElementById('bpu-kom').value)||1;
+  const operater =document.getElementById('bpu-operater').value.trim();
+  if(!datum||kolicina===0){ alert('Molimo popunite sva polja!'); return; }
+  bpuData.push({id:Date.now(),datum,materijal:mat,kolicina,kom,operater});
+  saveData('bpu_data',bpuData);
+  showToast('✅ Dostava uspješno evidentirana!');
+  clearBPUForm(); renderBPU(); renderTraker();
+}
+
+function clearBPUForm(){
+  document.getElementById('bpu-datum').value=todayStr();
+  document.getElementById('bpu-materijal').value='Agregat 0-4 mm';
+  document.getElementById('bpu-kom').value='1';
+  document.getElementById('bpu-operater').value='';
+  onBPUMaterialChange();
+}
+
+function deleteBPU(id){
+  if(!confirm('Obrisati ovaj unos?')) return;
+  bpuData=bpuData.filter(r=>r.id!==id);
+  saveData('bpu_data',bpuData); renderBPU(); renderTraker();
+}
+
+function renderBPU(){
+  const tbody=document.getElementById('tbody-bpu');
+  tbody.innerHTML='';
+  [...bpuData].sort((a,b)=>b.datum.localeCompare(a.datum)).forEach(r=>{
+    const matKey=matNameToKey(r.materijal);
+    const unit=matKey?MAT_UNITS[MAT_KEYS.indexOf(matKey)]:'kg';
+    tbody.innerHTML+=`<tr>
+      <td>${getDayName(r.datum)}</td><td>${fmtDate(r.datum)}</td><td>${r.materijal}</td>
+      <td>${fmt(r.kolicina,0)}</td><td>${unit}</td><td>${r.kom}</td>
+      <td><strong>${fmt(r.kolicina*r.kom,0)}</strong></td><td>${unit}</td>
+      <td>${r.operater||'-'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteBPU(${r.id})">🗑️</button></td>
+    </tr>`;
+  });
+}
+
+// ─── BPZ ──────────────────────────────────────────────────
+function calcBPZAg(type){
+  const kam=parseFloat(document.getElementById(`bpz-${type}-kam`).value)||0;
+  const kgPerKam=type==='ag04'?AG04_KG_PER_KAMION:AG48_KG_PER_KAMION;
+  const total=kam*kgPerKam;
+  document.getElementById(`bpz-${type}`).value=total;
+  const cap=type==='ag04'?624000:324000;
+  const pct=Math.min(100,(total/cap)*100);
+  const el=document.getElementById(`cap-${type}`);
+  const lbl=document.getElementById(`cap-${type}-lbl`);
+  if(el){ el.style.width=pct+'%'; el.className='progress-fill '+(pct>85?'fill-red':pct>60?'fill-orange':'fill-green'); }
+  if(lbl) lbl.textContent=`${fmt(total,0)} kg`;
+}
+
+function updateBPZCemCap(){
+  const val=parseFloat(document.getElementById('bpz-cem').value)||0;
+  const pct=Math.min(100,(val/90000)*100);
+  const el=document.getElementById('cap-cem');
+  const lbl=document.getElementById('cap-cem-lbl');
+  if(el){ el.style.width=pct+'%'; el.className='progress-fill '+(pct>85?'fill-red':pct>60?'fill-orange':'fill-green'); }
+  if(lbl) lbl.textContent=`${fmt(val,0)} kg`;
+}
+
+function saveBPZ(){
+  const datum=document.getElementById('bpz-datum').value;
+  if(!datum){ alert('Molimo unesite datum popisa!'); return; }
+  bpzData.push({
+    id:Date.now(), datum,
+    ag04:    parseFloat(document.getElementById('bpz-ag04').value)||0,
+    ag48:    parseFloat(document.getElementById('bpz-ag48').value)||0,
+    cem:     parseFloat(document.getElementById('bpz-cem').value)||0,
+    splast:  parseFloat(document.getElementById('bpz-splast').value)||0,
+    akceler: parseFloat(document.getElementById('bpz-akceler').value)||0,
+    retarder:parseFloat(document.getElementById('bpz-retarder').value)||0,
+    fiber:   parseFloat(document.getElementById('bpz-fiber').value)||0,
+    napomena:document.getElementById('bpz-napomena').value.trim()
+  });
+  saveData('bpz_data',bpzData);
+  showToast('✅ Stanje zaliha sačuvano! Tracker je ažuriran.');
+  clearBPZForm(); renderBPZ(); renderTraker();
+}
+
+function clearBPZForm(){
+  document.getElementById('bpz-datum').value=todayStr();
+  ['bpz-ag04-kam','bpz-ag48-kam'].forEach(id=>{ document.getElementById(id).value='0'; });
+  ['bpz-ag04','bpz-ag48'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['bpz-cem','bpz-splast','bpz-akceler','bpz-retarder','bpz-fiber','bpz-napomena'].forEach(id=>document.getElementById(id).value='');
+  ['ag04','ag48'].forEach(t=>{ const el=document.getElementById(`cap-${t}`); if(el){ el.style.width='0%'; el.className='progress-fill fill-green'; } });
+  updateBPZCemCap();
+}
+
+function deleteBPZ(id){
+  if(!confirm('Obrisati ovaj popis zaliha?')) return;
+  bpzData=bpzData.filter(r=>r.id!==id);
+  saveData('bpz_data',bpzData); renderBPZ(); renderTraker();
+}
+
+function renderBPZ(){
+  const tbody=document.getElementById('tbody-bpz');
+  tbody.innerHTML='';
+  [...bpzData].sort((a,b)=>b.datum.localeCompare(a.datum)).forEach(r=>{
+    tbody.innerHTML+=`<tr>
+      <td>${fmtDate(r.datum)}</td><td>${getDayName(r.datum)}</td>
+      <td>${fmt(r.ag04,0)}</td><td>${fmt(r.ag48,0)}</td><td>${fmt(r.cem,0)}</td>
+      <td>${fmt(r.splast,1)}</td><td>${fmt(r.akceler,1)}</td><td>${fmt(r.retarder,1)}</td><td>${fmt(r.fiber,1)}</td>
+      <td>${r.napomena||'-'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteBPZ(${r.id})">🗑️</button></td>
+    </tr>`;
+  });
+}
+
+// ─── STANJE MATERIJALA ────────────────────────────────────
+function renderStanje(){
+  const datum=document.getElementById('stanje-datum').value||todayStr();
+  const det=computeStockDetailed(datum);
+
+  // Cards
+  const cardsEl=document.getElementById('stanje-cards');
+  cardsEl.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const snap=det.snapStock[k]||0;
+    const ulaz=det.ulaz[k]||0;
+    const pot =det.potrosnja[k]||0;
+    const stan=det.stanje[k]||0;
+    const thr =thresholds[k]||0;
+    const valClass=stan<0?'val-red':stan<thr?'val-orange':'val-green';
+    const cap=CAPACITIES[k]||null;
+    const pct=cap?Math.min(100,(Math.max(0,stan)/cap)*100):null;
+    let fillClass='fill-green';
+    if(stan<thr) fillClass='fill-red';
+    else if(stan<thr*2) fillClass='fill-orange';
+
+    cardsEl.innerHTML+=`<div class="mat-state-card">
+      <div class="mat-state-name">${MAT_LABELS[i]}</div>
+      <div class="mat-state-row"><span>Početno stanje (BPZ)</span><span>+${fmt(snap,1)} ${MAT_UNITS[i]}</span></div>
+      <div class="mat-state-row"><span>Ulaz (BPU)</span><span style="color:var(--green);">+${fmt(ulaz,1)} ${MAT_UNITS[i]}</span></div>
+      <div class="mat-state-row"><span>Potrošnja (BPP)</span><span style="color:var(--red);">−${fmt(pot,1)} ${MAT_UNITS[i]}</span></div>
+      <div class="mat-state-total">
+        <span class="mat-state-total-label">Trenutno stanje</span>
+        <span class="mat-state-total-val ${valClass}">${fmt(stan,1)} ${MAT_UNITS[i]}</span>
+      </div>
+      ${cap?`<div class="progress-bar" style="margin-top:8px;"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>`:''}
+    </div>`;
+  });
+
+  // Detail table
+  const tbody=document.getElementById('tbody-stanje');
+  tbody.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const snap=det.snapStock[k]||0;
+    const ulaz=det.ulaz[k]||0;
+    const pot =det.potrosnja[k]||0;
+    const stan=det.stanje[k]||0;
+    const thr =thresholds[k]||0;
+    let status='<span class="stock-alert alert-ok">OK</span>';
+    if(stan<0)        status='<span class="stock-alert alert-crit">NEGATIVNO!</span>';
+    else if(stan<thr) status='<span class="stock-alert alert-crit">NARUČI!</span>';
+    else if(stan<thr*2) status='<span class="stock-alert alert-warn">Nisko</span>';
+    tbody.innerHTML+=`<tr>
+      <td><strong>${MAT_LABELS[i]}</strong></td><td>${MAT_UNITS[i]}</td>
+      <td>${fmt(snap,2)}</td>
+      <td style="color:var(--green);font-weight:600;">+${fmt(ulaz,2)}</td>
+      <td style="color:var(--red);font-weight:600;">−${fmt(pot,2)}</td>
+      <td style="font-weight:800;font-size:.95rem;">${fmt(stan,2)}</td>
+      <td>${status}</td>
+    </tr>`;
+  });
+
+  // Daily table (last 7 days)
+  const days=[];
+  for(let i=6;i>=0;i--){ const d=new Date(datum+'T00:00:00'); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  const tbody2=document.getElementById('tbody-stanje-dnevno');
+  tbody2.innerHTML='';
+  days.forEach(day=>{
+    const d2=computeStockDetailed(day);
+    // Add today's deliveries and subtract today's production
+    const todayDel={};
+    bpuData.filter(r=>r.datum===day).forEach(r=>{
+      const k=matNameToKey(r.materijal); if(k) todayDel[k]=(todayDel[k]||0)+r.kolicina*r.kom;
+    });
+    const todayPot={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+    bppData.filter(r=>r.datum===day).forEach(r=>{
+      if(r.potrosnjaOverride){ MAT_KEYS.forEach(k=>todayPot[k]=(todayPot[k]||0)+(r.potrosnjaOverride[k]||0)); }
+      else { const p=calcPotrosnja(r.tip==='Beton'?r.kolicina:0,r.tip==='CRF'?r.kolicina:0,r.tip==='Rehab'?r.kolicina:0); MAT_KEYS.forEach(k=>todayPot[k]=(todayPot[k]||0)+(p[k]||0)); }
+    });
+    const isToday=day===todayStr();
+    const stanje={};
+    MAT_KEYS.forEach(k=>stanje[k]=(d2.stanje[k]||0)+(todayDel[k]||0)-(todayPot[k]||0));
+    tbody2.innerHTML+=`<tr class="${isToday?'highlight-row':''}">
+      <td>${fmtDate(day)}</td><td>${getDayName(day)}</td>
+      ${MAT_KEYS.map((k,i)=>`<td style="color:${stanje[k]<0?'var(--red)':stanje[k]<(thresholds[k]||0)?'var(--orange)':'inherit'};font-weight:${stanje[k]<(thresholds[k]||0)?'700':'400'};">${fmt(stanje[k],1)}</td>`).join('')}
+    </tr>`;
+  });
+
+  // Info about snapshot
+  const snapInfo=det.snapDatum?`Osnova: BPZ popis od <strong>${fmtDate(det.snapDatum)}</strong>`:'<span style="color:var(--orange);">Nema unosa u BPZ – koristite tab Zalihe (BPZ) za unos početnog stanja.</span>';
+  document.getElementById('stanje-cards').insertAdjacentHTML('beforebegin',`<div class="info-box" style="margin-bottom:16px;">${snapInfo} &nbsp;|&nbsp; Obračun do: <strong>${fmtDate(datum)}</strong></div>`);
+}
+
+// ─── RECEPTURA ────────────────────────────────────────────
+function renderRecepturaTab(){
+  const tbody=document.getElementById('tbody-receptura');
+  tbody.innerHTML='';
+  ['Beton','CRF','Rehab'].forEach(tip=>{
+    const r=receptura[tip];
+    tbody.innerHTML+=`<tr><td>${tip}</td>${MAT_KEYS.map(k=>`<td><input type="number" step="0.01" min="0" id="rec-${tip}-${k}" value="${r[k]||0}"></td>`).join('')}</tr>`;
+  });
+  document.getElementById('crf-kolicina-tura').value   =crfParams.kolicinaTura;
+  document.getElementById('crf-proizvedena-tura').value=crfParams.proizvedenaTura;
+  MAT_KEYS.forEach(k=>{ const el=document.getElementById('thr-'+k); if(el) el.value=thresholds[k]||0; });
+  updateCRFFormulaBox();
+}
+
+function updateCRFFormulaBox(){
+  const pt=parseFloat(document.getElementById('crf-proizvedena-tura').value)||0;
+  const cemRec=receptura.CRF.cem||468;
+  document.getElementById('crf-formula-box').innerHTML=
+    `<strong>Primjer (10 tura):</strong><br>
+     • m³ ukupno: 10 × ${pt} = <strong>${fmt(10*pt,1)} m³</strong><br>
+     • Cement: 10 tura × ${cemRec} kg/m³ × 8 m³ = <strong>${fmt(10*cemRec*8,0)} kg</strong>`;
+}
+
+function saveCRFParams(){
+  crfParams.kolicinaTura    =parseFloat(document.getElementById('crf-kolicina-tura').value)||3.7;
+  crfParams.proizvedenaTura =parseFloat(document.getElementById('crf-proizvedena-tura').value)||8;
+  saveData('bpr_crf_params',crfParams);
+  updateCRFFormulaBox();
+  showToast('✅ CRF parametri sačuvani!');
+  renderTraker();
+}
+
+function saveReceptura(){
+  ['Beton','CRF','Rehab'].forEach(tip=>{
+    MAT_KEYS.forEach(k=>{ const el=document.getElementById(`rec-${tip}-${k}`); if(el) receptura[tip][k]=parseFloat(el.value)||0; });
+  });
+  saveData('bpr_receptura',receptura);
+  updateCRFFormulaBox();
+  showToast('✅ Receptura sačuvana!');
+  renderTraker();
+}
+
+function saveThresholds(){
+  MAT_KEYS.forEach(k=>{ const el=document.getElementById('thr-'+k); if(el) thresholds[k]=parseFloat(el.value)||0; });
+  saveData('bpr_thresholds',thresholds);
+  showToast('✅ Pragovi upozorenja sačuvani!');
+  renderTraker();
+}
+
+// ─── HISTORIJA ────────────────────────────────────────────
+function renderHistorija(){
+  const tipF=document.getElementById('filter-tip').value;
+  const odF =document.getElementById('filter-od').value;
+  const doF =document.getElementById('filter-do').value;
+  let data=[...bppData].sort((a,b)=>b.datum.localeCompare(a.datum));
+  if(tipF) data=data.filter(r=>r.tip===tipF);
+  if(odF)  data=data.filter(r=>r.datum>=odF);
+  if(doF)  data=data.filter(r=>r.datum<=doF);
+  const tbody=document.getElementById('tbody-historija');
+  tbody.innerHTML='';
+  data.forEach(r=>{
+    let pot;
+    if(r.potrosnjaOverride){
+      // Sum all override columns
+      pot={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+      // For display, show the saved override totals
+      MAT_KEYS.forEach(k=>pot[k]=r.potrosnjaOverride[k]||0);
+    } else {
+      pot=calcPotrosnja(r.tip==='Beton'?r.kolicina:0,r.tip==='CRF'?r.kolicina:0,r.tip==='Rehab'?r.kolicina:0);
+    }
+    const crfM3=r.tip==='CRF'?crfTotalM3(r.kolicina):null;
+    const bc=r.tip==='Beton'?'badge-beton':r.tip==='CRF'?'badge-crf':'badge-rehab';
+    const hasOverride=r.potrosnjaOverride?'*':'';
+    tbody.innerHTML+=`<tr>
+      <td>${fmtDate(r.datum)}</td><td>${getDayName(r.datum)}</td><td>${r.smjena||'-'}</td><td>${r.radiliste||'-'}</td>
+      <td><strong>${fmt(r.kolicina,1)}</strong></td><td><span class="badge ${bc}">${r.tip}</span>${hasOverride?'<span title="Ručno korigovano" style="color:var(--orange);font-size:.75rem;"> ✎</span>':''}</td>
+      <td>${crfM3!==null?fmt(crfM3,1):'-'}</td>
+      <td>${fmt(pot.ag04,0)}</td><td>${fmt(pot.ag48,0)}</td><td>${fmt(pot.cem,0)}</td>
+      <td>${fmt(pot.splast,2)}</td><td>${fmt(pot.akceler,2)}</td><td>${fmt(pot.retarder,2)}</td><td>${fmt(pot.fiber,2)}</td>
+      <td>${r.operater||'-'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteBPP(${r.id})">🗑️</button></td>
+    </tr>`;
+  });
+  const totB=data.filter(r=>r.tip==='Beton').reduce((s,r)=>s+r.kolicina,0);
+  const totC=data.filter(r=>r.tip==='CRF').reduce((s,r)=>s+r.kolicina,0);
+  const totR=data.filter(r=>r.tip==='Rehab').reduce((s,r)=>s+r.kolicina,0);
+  document.getElementById('hist-summary').innerHTML=
+    `Ukupno: <strong>${data.length}</strong> unosa &nbsp;|&nbsp; Beton: <strong>${fmt(totB,1)} m³</strong> &nbsp;|&nbsp; CRF: <strong>${fmt(totC,0)} tura (${fmt(crfTotalM3(totC),1)} m³)</strong> &nbsp;|&nbsp; Rehab: <strong>${fmt(totR,1)} m³</strong>`;
+}
+
+function deleteBPP(id){
+  if(!confirm('Obrisati ovaj unos?')) return;
+  bppData=bppData.filter(r=>r.id!==id);
+  saveData('bpp_data',bppData); renderHistorija(); renderTraker();
+}
+
+function clearFilters(){
+  ['filter-tip','filter-od','filter-do'].forEach(id=>document.getElementById(id).value='');
+  renderHistorija();
+}
+
+// ─── EXCEL EXPORT ─────────────────────────────────────────
+function exportAllExcel(){
+  const today=todayStr();
+  const det=computeStockDetailed(today);
+  const stanjeRows=[
+    ['Materijal','Jedinica','Pocetno stanje (BPZ)','Ulaz (BPU)','Potrosnja (BPP)','Trenutno stanje','Status'],
+    ...MAT_KEYS.map((k,i)=>{
+      const snap=det.snapStock[k]||0, ulaz=det.ulaz[k]||0, pot=det.potrosnja[k]||0, stan=det.stanje[k]||0;
+      const thr=thresholds[k]||0;
+      const status=stan<0?'NEGATIVNO':stan<thr?'NARUDI':stan<thr*2?'Nisko':'OK';
+      return [MAT_LABELS[i],MAT_UNITS[i],snap,ulaz,pot,stan,status];
+    })
+  ];
+
+  const sheets=[
+    {name:'BPP_Proizvodnja', rows:getBPPRows()},
+    {name:'BPU_Ulaz',        rows:getBPURows()},
+    {name:'BPZ_Zalihe',      rows:getBPZRows()},
+    {name:'BPR_Receptura',   rows:getBPRRows()},
+    {name:'Stanje_Materijala',rows:stanjeRows},
+  ];
+
+  let xml=`<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n`;
+  xml+=`<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel">\n`;
+  xml+=` <Styles>\n  <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1A3A5C" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>\n </Styles>\n`;
+
+  sheets.forEach(sheet=>{
+    xml+=` <Worksheet ss:Name="${sheet.name}">\n  <Table>\n`;
+    sheet.rows.forEach((row,ri)=>{
+      xml+='   <Row>\n';
+      row.forEach(cell=>{
+        const isH=ri===0;
+        const sAttr=isH?' ss:StyleID="hdr"':'';
+        if(cell===null||cell===undefined||cell===''){
+          xml+=`    <Cell${sAttr}><Data ss:Type="String"></Data></Cell>\n`;
+        } else if(typeof cell==='number'){
+          xml+=`    <Cell><Data ss:Type="Number">${cell}</Data></Cell>\n`;
+        } else {
+          const esc=String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          xml+=`    <Cell${sAttr}><Data ss:Type="String">${esc}</Data></Cell>\n`;
+        }
+      });
+      xml+='   </Row>\n';
+    });
+    xml+=`  </Table>\n </Worksheet>\n`;
+  });
+  xml+=`</Workbook>`;
+
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`DPM_Betonara_Sve_Baze_${today}.xls`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ Sve baze exportovane u jedan Excel fajl!');
+}
+
+function getBPPRows(){
+  const hdr=['Datum','Dan','Smjena','Radiliste','Kolicina','Tip','CRF_m3','Ag04_kg','Ag48_kg','Cem_kg','Splast_L','Akceler_L','Retarder_L','Fiber_kg','Operater','Korigovano'];
+  const rows=bppData.map(r=>{
+    let pot;
+    if(r.potrosnjaOverride){ pot={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0}; MAT_KEYS.forEach(k=>pot[k]=r.potrosnjaOverride[k]||0); }
+    else { pot=calcPotrosnja(r.tip==='Beton'?r.kolicina:0,r.tip==='CRF'?r.kolicina:0,r.tip==='Rehab'?r.kolicina:0); }
+    return [r.datum,getDayName(r.datum),r.smjena||'',r.radiliste||'',r.kolicina,r.tip,
+      r.tip==='CRF'?crfTotalM3(r.kolicina):'',
+      pot.ag04,pot.ag48,pot.cem,pot.splast,pot.akceler,pot.retarder,pot.fiber,
+      r.operater||'',r.potrosnjaOverride?'DA':'NE'];
+  });
+  return [hdr,...rows];
+}
+
+function getBPURows(){
+  const hdr=['Datum','Dan','Materijal','Kolicina_po_jed','Jedinica','Kom','Total','Jedinica','Operater'];
+  const rows=bpuData.map(r=>{
+    const matKey=matNameToKey(r.materijal);
+    const unit=matKey?MAT_UNITS[MAT_KEYS.indexOf(matKey)]:'kg';
+    return [r.datum,getDayName(r.datum),r.materijal,r.kolicina,unit,r.kom,r.kolicina*r.kom,unit,r.operater||''];
+  });
+  return [hdr,...rows];
+}
+
+function getBPZRows(){
+  const hdr=['Datum','Dan','Ag04_kg','Ag48_kg','Cem_kg','Splast_L','Akceler_L','Retarder_L','Fiber_kg','Napomena'];
+  const rows=bpzData.map(r=>[r.datum,getDayName(r.datum),r.ag04,r.ag48,r.cem,r.splast,r.akceler,r.retarder,r.fiber,r.napomena||'']);
+  return [hdr,...rows];
+}
+
+function getBPRRows(){
+  const hdr=['Tip','Ag04_kg_m3','Ag48_kg_m3','Cem_kg_m3','Splast_L_m3','Akceler_L_m3','Retarder_L_m3','Fiber_kg_m3'];
+  const rows=['Beton','CRF','Rehab'].map(tip=>{
+    const r=receptura[tip];
+    return [tip,r.ag04,r.ag48,r.cem,r.splast,r.akceler,r.retarder,r.fiber];
+  });
+  rows.push([]);
+  rows.push(['CRF_Kolicina_po_turi_m3',crfParams.kolicinaTura,'','','','','','']);
+  rows.push(['CRF_Proizvedena_po_turi_m3',crfParams.proizvedenaTura,'','','','','','']);
+  rows.push(['CRF_Cement_formula','ture x 468 x 8','','','','','','']);
+  return [hdr,...rows];
+}
+
+
+
+// ═══ CHART INSTANCES ═══════════════════════════════════════
+let chartWeekLine   = null;
+let chartRecStvarno = null;
+let chartDeviation  = null;
+let chartRastur     = null;
+let weekOffset      = 0;
+
+// ─── WEEK HELPERS ─────────────────────────────────────────
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const y1 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return { week: Math.ceil((((d - y1) / 86400000) + 1) / 7), year: d.getUTCFullYear() };
+}
+
+function getCompanyWeekRange(offset) {
+  const today = new Date();
+  const dow = today.getDay();
+  const daysToThursday = (dow >= 4) ? (dow - 4) : (dow + 3);
+  const thursday = new Date(today);
+  thursday.setDate(today.getDate() - daysToThursday + offset * 7);
+  thursday.setHours(0,0,0,0);
+  const wednesday = new Date(thursday);
+  wednesday.setDate(thursday.getDate() + 6);
+  return { start: thursday, end: wednesday };
+}
+
+function dStr(d) { return d.toISOString().slice(0,10); }
+
+function changeWeek(dir) {
+  weekOffset += dir;
+  if (weekOffset > 0) weekOffset = 0;
+  renderWeekChart();
+}
+
+// ─── 1. SEDMICNI LINIJSKI DIJAGRAM ────────────────────────
+function renderWeekChart() {
+  const { start, end } = getCompanyWeekRange(weekOffset);
+  const startStr = dStr(start), endStr = dStr(end);
+  const isoW = getISOWeek(start);
+  document.getElementById('week-label').textContent =
+    fmtDate(startStr) + ' (cet) – ' + fmtDate(endStr) + ' (sri)';
+  document.getElementById('week-num-badge').textContent = 'Sedmica ' + isoW.week + ' / ' + isoW.year;
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i); days.push(dStr(d));
+  }
+  const dayLabels = days.map(d => {
+    const dt = new Date(d + 'T00:00:00');
+    return DAYS_BS[dt.getDay()].slice(0,3) + ' ' + fmtDate(d).slice(0,5);
+  });
+  const betonData = days.map(day =>
+    bppData.filter(r => r.datum===day && r.tip==='Beton').reduce((s,r)=>s+r.kolicina,0));
+  const crfData = days.map(day => {
+    const ture = bppData.filter(r => r.datum===day && r.tip==='CRF').reduce((s,r)=>s+r.kolicina,0);
+    return parseFloat(crfTotalM3(ture).toFixed(2));
+  });
+  const rehabData = days.map(day =>
+    bppData.filter(r => r.datum===day && r.tip==='Rehab').reduce((s,r)=>s+r.kolicina,0));
+
+  const canvas = document.getElementById('chart-week-line');
+  if (!canvas) return;
+  if (chartWeekLine) { chartWeekLine.destroy(); chartWeekLine = null; }
+  chartWeekLine = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: dayLabels,
+      datasets: [
+        { label: 'Prskani Mlazni Beton (m3)', data: betonData,
+          borderColor:'#1a3a5c', backgroundColor:'#1a3a5c18', borderWidth:2.5,
+          pointRadius:5, pointHoverRadius:8, pointBackgroundColor:'#1a3a5c', fill:true, tension:0.3 },
+        { label: 'CRF (m3)', data: crfData,
+          borderColor:'#27ae60', backgroundColor:'#27ae6018', borderWidth:2.5,
+          pointRadius:5, pointHoverRadius:8, pointBackgroundColor:'#27ae60', fill:true, tension:0.3 },
+        { label: 'Rehab (m3)', data: rehabData,
+          borderColor:'#e8a020', backgroundColor:'#e8a02018', borderWidth:2.5,
+          pointRadius:5, pointHoverRadius:8, pointBackgroundColor:'#e8a020', fill:true, tension:0.3 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ position:'top', labels:{ font:{size:12}, padding:16 } },
+        tooltip:{ callbacks:{ label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + ' m3' } }
+      },
+      scales:{
+        x:{ grid:{color:'#e8ecf0'}, ticks:{font:{size:11}} },
+        y:{ beginAtZero:true, grid:{color:'#e8ecf0'},
+            title:{display:true, text:'m3', font:{size:12}},
+            ticks:{callback: v => v + ' m3'} }
+      }
+    }
+  });
+}
+
+// ─── 2. RECEPTURA vs STVARNO ──────────────────────────────
+function renderRecVsStvarnoChart() {
+  const canvas = document.getElementById('chart-rec-stvarno');
+  if (!canvas) return;
+  const beton = parseFloat(document.getElementById('inp-beton') && document.getElementById('inp-beton').value) || 0;
+  const crf   = parseFloat(document.getElementById('inp-crf')   && document.getElementById('inp-crf').value)   || 0;
+  const rehab = parseFloat(document.getElementById('inp-rehab') && document.getElementById('inp-rehab').value) || 0;
+
+  if (beton===0 && crf===0 && rehab===0) {
+    if (chartRecStvarno) { chartRecStvarno.destroy(); chartRecStvarno=null; }
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font='14px Segoe UI'; ctx.fillStyle='#7f8c8d'; ctx.textAlign='center';
+    ctx.fillText('Unesite kolicine u formu za unos da biste vidjeli grafikon.', canvas.width/2, 80);
+    return;
+  }
+  const projected = calcPotrosnja(beton, crf, rehab);
+  const actual = {};
+  MAT_KEYS.forEach(k => {
+    const vB = parseFloat((document.getElementById('pv-beton-'+k) || {value:0}).value) || 0;
+    const vC = parseFloat((document.getElementById('pv-crf-'+k)   || {value:0}).value) || 0;
+    const vR = parseFloat((document.getElementById('pv-rehab-'+k) || {value:0}).value) || 0;
+    actual[k] = vB + vC + vR;
+  });
+  const visKeys   = MAT_KEYS.filter(k => (projected[k]||0)>0 || (actual[k]||0)>0);
+  const visLabels = visKeys.map(k => MAT_LABELS[MAT_KEYS.indexOf(k)] + ' (' + MAT_UNITS[MAT_KEYS.indexOf(k)] + ')');
+  const projData  = visKeys.map(k => parseFloat((projected[k]||0).toFixed(2)));
+  const actData   = visKeys.map(k => parseFloat((actual[k]||0).toFixed(2)));
+
+  if (chartRecStvarno) { chartRecStvarno.destroy(); chartRecStvarno=null; }
+  chartRecStvarno = new Chart(canvas, {
+    type:'bar',
+    data:{ labels:visLabels, datasets:[
+      { label:'Projektovano (Receptura)', data:projData,
+        backgroundColor:'#1a3a5ccc', borderColor:'#1a3a5c', borderWidth:1.5, borderRadius:4 },
+      { label:'Stvarno (Uneseno)', data:actData,
+        backgroundColor:'#e8a020cc', borderColor:'#e8a020', borderWidth:1.5, borderRadius:4 }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{position:'top', labels:{font:{size:12}, padding:14}},
+        tooltip:{ callbacks:{ afterBody: items => {
+          if(items.length<2) return '';
+          const proj=items[0].parsed.y, act=items[1].parsed.y;
+          if(proj===0) return '';
+          const diff=act-proj, pct=((diff/proj)*100).toFixed(1);
+          return 'Razlika: ' + (diff>=0?'+':'') + diff.toFixed(2) + ' (' + pct + '%)';
+        }}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}}},
+        y:{beginAtZero:true, grid:{color:'#e8ecf0'},
+           title:{display:true, text:'Kolicina', font:{size:12}}}
+      }
+    }
+  });
+}
+
+// ─── 3. ODSTUPANJE OD RECEPTA ─────────────────────────────
+function calcDeviation(record) {
+  if (!record.potrosnjaOverride) return null;
+  const beton=record.tip==='Beton'?record.kolicina:0;
+  const crf  =record.tip==='CRF'  ?record.kolicina:0;
+  const rehab=record.tip==='Rehab'?record.kolicina:0;
+  const proj=calcPotrosnja(beton,crf,rehab);
+  const act={};
+  MAT_KEYS.forEach(k=>act[k]=record.potrosnjaOverride[k]||0);
+  const devs={}; let totalAbs=0, cnt=0;
+  MAT_KEYS.forEach(k=>{
+    if((proj[k]||0)>0){ devs[k]=((act[k]-proj[k])/proj[k])*100; totalAbs+=Math.abs(devs[k]); cnt++; }
+    else devs[k]=null;
+  });
+  devs.avg = cnt>0 ? totalAbs/cnt : 0;
+  return devs;
+}
+
+function renderDeviationCharts() {
+  const odF  = document.getElementById('ch-dev-od').value;
+  const doF  = document.getElementById('ch-dev-do').value;
+  const tipF = document.getElementById('ch-dev-tip').value;
+  let records = bppData.filter(r=>r.potrosnjaOverride);
+  if(odF)  records=records.filter(r=>r.datum>=odF);
+  if(doF)  records=records.filter(r=>r.datum<=doF);
+  if(tipF) records=records.filter(r=>r.tip===tipF);
+
+  const opDevs={}, opCounts={}, detailRows=[];
+  records.forEach(r=>{
+    const dev=calcDeviation(r); if(!dev) return;
+    const op=r.operater||'Nepoznat';
+    if(!opDevs[op]){opDevs[op]=0;opCounts[op]=0;}
+    opDevs[op]+=dev.avg; opCounts[op]++;
+    detailRows.push({op,datum:r.datum,tip:r.tip,dev,id:r.id});
+  });
+
+  const opLabels  = Object.keys(opDevs).sort((a,b)=>(opDevs[a]/opCounts[a])-(opDevs[b]/opCounts[b]));
+  const opAvgData = opLabels.map(op=>parseFloat((opDevs[op]/opCounts[op]).toFixed(2)));
+  const canvas    = document.getElementById('chart-deviation');
+  if(chartDeviation){chartDeviation.destroy();chartDeviation=null;}
+
+  if(opLabels.length===0){
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font='13px Segoe UI'; ctx.fillStyle='#7f8c8d'; ctx.textAlign='center';
+    ctx.fillText('Nema korigovanih unosa za odabrani period.', canvas.width/2, 80);
+    document.getElementById('tbody-deviation').innerHTML='';
+    document.getElementById('dev-summary').textContent='';
+    return;
+  }
+  const bgColors=opLabels.map((_,i)=>{
+    const v=opAvgData[i];
+    return v<=5?'#27ae60cc':v<=15?'#f39c12cc':'#e74c3ccc';
+  });
+  chartDeviation=new Chart(canvas,{
+    type:'bar',
+    data:{labels:opLabels, datasets:[{label:'Prosjecno odstupanje (%)', data:opAvgData,
+      backgroundColor:bgColors, borderColor:bgColors.map(c=>c.slice(0,7)), borderWidth:1.5, borderRadius:5}]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x.toFixed(2)+'% prosj. odstupanje'}}},
+      scales:{
+        x:{beginAtZero:true, title:{display:true,text:'Odstupanje (%)',font:{size:11}},
+           ticks:{callback:v=>v+'%'}},
+        y:{grid:{display:false}}
+      }
+    }
+  });
+
+  const tbody=document.getElementById('tbody-deviation');
+  tbody.innerHTML='';
+  detailRows.sort((a,b)=>a.dev.avg-b.dev.avg);
+  const best=detailRows[0], worst=detailRows[detailRows.length-1];
+  detailRows.forEach(row=>{
+    const isBest=row===best, isWorst=row===worst;
+    const badge=isBest?'<span class="best-badge">&#127942; Najblizi</span>':
+                isWorst?'<span class="worst-badge">&#9888;&#65039; Najdalji</span>':'';
+    const fmtDev=v=>{
+      if(v===null) return '<span style="color:var(--muted);">–</span>';
+      const cls=Math.abs(v)<=5?'dev-ok':v>0?'dev-pos':'dev-neg';
+      return '<span class="'+cls+'">'+(v>=0?'+':'')+v.toFixed(1)+'%</span>';
+    };
+    const bc=row.tip==='Beton'?'badge-beton':row.tip==='CRF'?'badge-crf':'badge-rehab';
+    tbody.innerHTML+='<tr><td><strong>'+row.op+'</strong> '+badge+'</td><td>'+fmtDate(row.datum)+'</td>'+
+      '<td><span class="badge '+bc+'">'+row.tip+'</span></td>'+
+      ['ag04','ag48','cem','splast','akceler','fiber'].map(k=>'<td>'+fmtDev(row.dev[k])+'</td>').join('')+
+      '<td><strong>'+row.dev.avg.toFixed(1)+'%</strong></td>'+
+      '<td><button class="btn btn-danger btn-sm" onclick="deleteBPP('+row.id+')">&#128465;&#65039;</button></td></tr>';
+  });
+  if(best&&worst){
+    document.getElementById('dev-summary').innerHTML=
+      '&#127942; Najblizi receptu: <strong>'+best.op+'</strong> ('+best.dev.avg.toFixed(1)+'%, '+fmtDate(best.datum)+') &nbsp;|&nbsp; '+
+      '&#9888;&#65039; Najdalji: <strong>'+worst.op+'</strong> ('+worst.dev.avg.toFixed(1)+'%, '+fmtDate(worst.datum)+')';
+  }
+}
+
+function resetDevFilter(){
+  ['ch-dev-od','ch-dev-do','ch-dev-tip'].forEach(id=>document.getElementById(id).value='');
+  renderDeviationCharts();
+}
+
+// ─── 4. RASTUR MATERIJALA ─────────────────────────────────
+function getWeekRangeFromISO(isoWeek, year) {
+  const jan4=new Date(year,0,4);
+  const jan4dow=jan4.getDay()||7;
+  const week1Mon=new Date(jan4);
+  week1Mon.setDate(jan4.getDate()-(jan4dow-1));
+  const targetMon=new Date(week1Mon);
+  targetMon.setDate(week1Mon.getDate()+(isoWeek-1)*7);
+  const thursday=new Date(targetMon);
+  thursday.setDate(targetMon.getDate()+3);
+  const wednesday=new Date(thursday);
+  wednesday.setDate(thursday.getDate()+6);
+  return {start:thursday, end:wednesday};
+}
+
+function refreshRasturOperaterSelect(){
+  const sel=document.getElementById('rastur-operater');
+  if(!sel) return;
+  const current=sel.value;
+  sel.innerHTML='<option value="">-- Svi operateri --</option>';
+  operateri.forEach(op=>{
+    const opt=document.createElement('option');
+    opt.value=op; opt.textContent=op;
+    if(op===current) opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+function renderRasturChart(){
+  const selOp   = document.getElementById('rastur-operater').value;
+  const weekNum = parseInt(document.getElementById('rastur-week-num').value);
+  const year    = parseInt(document.getElementById('rastur-year').value);
+  const canvas  = document.getElementById('chart-rastur');
+  const summaryEl=document.getElementById('rastur-summary-cards');
+  const infoEl   =document.getElementById('rastur-info');
+  if(!canvas) return;
+  if(!weekNum||!year){
+    summaryEl.innerHTML='';
+    infoEl.textContent='Odaberite sedmicu i godinu za prikaz rastura.';
+    if(chartRastur){chartRastur.destroy();chartRastur=null;}
+    return;
+  }
+  const {start,end}=getWeekRangeFromISO(weekNum,year);
+  const startStr=dStr(start), endStr=dStr(end);
+  let records=bppData.filter(r=>r.datum>=startStr&&r.datum<=endStr);
+  if(selOp) records=records.filter(r=>r.operater===selOp);
+
+  infoEl.innerHTML='Period: <strong>'+fmtDate(startStr)+' – '+fmtDate(endStr)+'</strong> &nbsp;|&nbsp; '+
+    'Operater: <strong>'+(selOp||'Svi')+'</strong> &nbsp;|&nbsp; Unosa: <strong>'+records.length+'</strong>';
+
+  const projected={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+  const actual   ={ag04:0,ag48:0,cem:0,splast:0,akceler:0,retarder:0,fiber:0};
+  records.forEach(r=>{
+    const beton=r.tip==='Beton'?r.kolicina:0;
+    const crf  =r.tip==='CRF'  ?r.kolicina:0;
+    const rehab=r.tip==='Rehab'?r.kolicina:0;
+    const proj=calcPotrosnja(beton,crf,rehab);
+    MAT_KEYS.forEach(k=>projected[k]+=(proj[k]||0));
+    if(r.potrosnjaOverride){ MAT_KEYS.forEach(k=>actual[k]+=(r.potrosnjaOverride[k]||0)); }
+    else { MAT_KEYS.forEach(k=>actual[k]+=(proj[k]||0)); }
+  });
+
+  summaryEl.innerHTML='';
+  MAT_KEYS.forEach((k,i)=>{
+    const proj=projected[k]||0, act=actual[k]||0, diff=act-proj;
+    const pct=proj>0?((diff/proj)*100).toFixed(1):'–';
+    const diffClass=diff>0?'rc-over':diff<0?'rc-under':'rc-exact';
+    const diffSign=diff>0?'+':'';
+    summaryEl.innerHTML+='<div class="rastur-card">'+
+      '<div class="rc-label">'+MAT_LABELS[i]+'</div>'+
+      '<div class="rc-proj">Proj: '+fmt(proj,1)+' '+MAT_UNITS[i]+'</div>'+
+      '<div class="rc-real '+diffClass+'">Stvarno: '+fmt(act,1)+' '+MAT_UNITS[i]+'</div>'+
+      '<div class="rc-diff '+diffClass+'">'+diffSign+fmt(diff,1)+' '+MAT_UNITS[i]+' ('+pct+'%)</div>'+
+      '</div>';
+  });
+
+  const visKeys  =MAT_KEYS.filter(k=>(projected[k]||0)>0||(actual[k]||0)>0);
+  const visLabels=visKeys.map(k=>MAT_LABELS[MAT_KEYS.indexOf(k)]+' ('+MAT_UNITS[MAT_KEYS.indexOf(k)]+')');
+  const projData =visKeys.map(k=>parseFloat((projected[k]||0).toFixed(2)));
+  const actData  =visKeys.map(k=>parseFloat((actual[k]||0).toFixed(2)));
+
+  if(chartRastur){chartRastur.destroy();chartRastur=null;}
+  if(visKeys.length===0){
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font='14px Segoe UI'; ctx.fillStyle='#7f8c8d'; ctx.textAlign='center';
+    ctx.fillText('Nema podataka za odabrani period i operatera.', canvas.width/2, 100);
+    return;
+  }
+  chartRastur=new Chart(canvas,{
+    type:'bar',
+    data:{labels:visLabels, datasets:[
+      {label:'Projektovano (Receptura)', data:projData,
+       backgroundColor:'#1a3a5ccc', borderColor:'#1a3a5c', borderWidth:1.5, borderRadius:4},
+      {label:'Stvarna Potrosnja', data:actData,
+       backgroundColor:'#e74c3ccc', borderColor:'#e74c3c', borderWidth:1.5, borderRadius:4}
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{position:'top', labels:{font:{size:12}, padding:14}},
+        tooltip:{callbacks:{afterBody:items=>{
+          if(items.length<2) return '';
+          const proj=items[0].parsed.y, act=items[1].parsed.y;
+          if(proj===0) return '';
+          const diff=act-proj, pct=((diff/proj)*100).toFixed(1);
+          return ['Razlika: '+(diff>=0?'+':'')+diff.toFixed(2), 'Rastur: '+pct+'%'];
+        }}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:11}}},
+        y:{beginAtZero:true, grid:{color:'#e8ecf0'},
+           title:{display:true, text:'Kolicina', font:{size:12}},
+           ticks:{callback:v=>v.toLocaleString('bs-BA')}}
+      }
+    }
+  });
+}
+
+function resetRasturFilter(){
+  document.getElementById('rastur-operater').value='';
+  document.getElementById('rastur-week-num').value='';
+  document.getElementById('rastur-year').value=new Date().getFullYear();
+  if(chartRastur){chartRastur.destroy();chartRastur=null;}
+  document.getElementById('rastur-summary-cards').innerHTML='';
+  document.getElementById('rastur-info').textContent='Odaberite sedmicu i godinu za prikaz rastura.';
+}
+
+// ─── OPERATERI ────────────────────────────────────────────
+const DEFAULT_OPERATERI = [
+  'Dinko B.','Mirsad S.','Zijad F.','Edis K.','Zaim A.','Muhamed K.'
+];
+let operateri = loadData('operateri_list', DEFAULT_OPERATERI);
+
+function renderOperateriGrid() {
+  const grid = document.getElementById('op-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  operateri.forEach((op, i) => {
+    const initials = op.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    const colors = ['#1a3a5c','#27ae60','#e8a020','#2980b9','#8e44ad','#e74c3c','#16a085','#d35400'];
+    const bg = colors[i % colors.length];
+    grid.innerHTML += `<div class="op-card">
+      <div class="op-avatar" style="background:${bg};">${initials}</div>
+      <input type="text" class="op-name" id="op-name-${i}" value="${op}" oninput="operateri[${i}]=this.value;refreshOperateriSelects();">
+      <button class="op-del" onclick="deleteOperater(${i})" title="Obriši">✕</button>
+    </div>`;
+  });
+  refreshOperateriSelects();
+}
+
+function addOperater() {
+  operateri.push('Novi Operater');
+  saveData('operateri_list', operateri);
+  renderOperateriGrid();
+}
+
+function deleteOperater(i) {
+  if (!confirm(`Obrisati operatera "${operateri[i]}"?`)) return;
+  operateri.splice(i, 1);
+  saveData('operateri_list', operateri);
+  renderOperateriGrid();
+}
+
+function saveOperateri() {
+  // Collect current input values
+  operateri.forEach((_, i) => {
+    const el = document.getElementById(`op-name-${i}`);
+    if (el) operateri[i] = el.value.trim() || operateri[i];
+  });
+  saveData('operateri_list', operateri);
+  refreshOperateriSelects();
+  refreshRasturOperaterSelect();
+  showToast('✅ Operateri sačuvani!');
+}
+
+function refreshOperateriSelects() {
+  ['inp-operater','bpu-operater'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">-- Odaberi operatera --</option>';
+    operateri.forEach(op => {
+      const opt = document.createElement('option');
+      opt.value = op; opt.textContent = op;
+      if (op === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// ─── CHART INSTANCES ──────────────────────────────────────
+let chartBeton = null;
+let chartCRF   = null;
+
+const CHART_COLORS = [
+  '#1a3a5c','#e8a020','#27ae60','#e74c3c','#2980b9','#8e44ad',
+  '#16a085','#d35400','#2c3e50','#f39c12','#1abc9c','#c0392b'
+];
+
+function buildOperaterData(tip, odFilter, doFilter) {
+  // Returns { labels: [op1,op2,...], data: [total1,total2,...], byDate: {op: {date: val}} }
+  let records = bppData.filter(r => r.tip === tip);
+  if (odFilter) records = records.filter(r => r.datum >= odFilter);
+  if (doFilter) records = records.filter(r => r.datum <= doFilter);
+
+  const totals = {};
+  const byDate = {};
+  records.forEach(r => {
+    const op = r.operater || 'Nepoznat';
+    const val = tip === 'CRF' ? crfTotalM3(r.kolicina) : r.kolicina;
+    totals[op] = (totals[op] || 0) + val;
+    if (!byDate[op]) byDate[op] = {};
+    byDate[op][r.datum] = (byDate[op][r.datum] || 0) + val;
+  });
+
+  const labels = Object.keys(totals).sort((a,b) => totals[b]-totals[a]);
+  const data   = labels.map(l => parseFloat(totals[l].toFixed(2)));
+  return { labels, data, byDate };
+}
+
+function renderCharts() {
+  const betonOd = document.getElementById('ch-beton-od').value;
+  const betonDo = document.getElementById('ch-beton-do').value;
+  const crfOd   = document.getElementById('ch-crf-od').value;
+  const crfDo   = document.getElementById('ch-crf-do').value;
+
+  renderOperaterChart('chart-beton', 'Beton', betonOd, betonDo);
+  renderOperaterChart('chart-crf',   'CRF',   crfOd,   crfDo);
+}
+
+function renderOperaterChart(canvasId, tip, odFilter, doFilter) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const { labels, data, byDate } = buildOperaterData(tip, odFilter, doFilter);
+
+  // Destroy existing
+  if (canvasId === 'chart-beton' && chartBeton) { chartBeton.destroy(); chartBeton = null; }
+  if (canvasId === 'chart-crf'   && chartCRF)   { chartCRF.destroy();   chartCRF   = null; }
+
+  if (labels.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px Segoe UI';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.textAlign = 'center';
+    ctx.fillText('Nema podataka za odabrani period.', canvas.width/2, 80);
+    return;
+  }
+
+  const unit = tip === 'CRF' ? 'm³' : 'm³';
+  const label = tip === 'CRF' ? 'CRF (m³)' : 'Prskani Mlazni Beton (m³)';
+  const bgColors = labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
+  const bgColorsAlpha = bgColors.map(c => c + 'cc');
+
+  // Build stacked dataset per date
+  // Collect all unique dates
+  const allDates = [...new Set(
+    bppData.filter(r => r.tip === tip && (!odFilter || r.datum >= odFilter) && (!doFilter || r.datum <= doFilter))
+           .map(r => r.datum)
+  )].sort();
+
+  let chart;
+  if (allDates.length > 1 && labels.length > 0) {
+    // Stacked bar chart by date
+    const datasets = labels.map((op, i) => ({
+      label: op,
+      data: allDates.map(d => {
+        const v = byDate[op] && byDate[op][d] ? parseFloat(byDate[op][d].toFixed(2)) : 0;
+        return v;
+      }),
+      backgroundColor: bgColors[i % bgColors.length] + 'cc',
+      borderColor:     bgColors[i % bgColors.length],
+      borderWidth: 1,
+      borderRadius: 3,
+    }));
+
+    chart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels: allDates.map(d => fmtDate(d)), datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { font: { size: 12 }, padding: 14 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} ${unit}`
+            }
+          }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true,
+               title: { display: true, text: unit, font: { size: 12 } },
+               ticks: { callback: v => v + ' ' + unit } }
+        }
+      }
+    });
+  } else {
+    // Horizontal bar – totals per operator
+    chart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label,
+          data,
+          backgroundColor: bgColorsAlpha,
+          borderColor: bgColors,
+          borderWidth: 2,
+          borderRadius: 5,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.parsed.x.toFixed(2)} ${unit}`
+            }
+          }
+        },
+        scales: {
+          x: { beginAtZero: true,
+               title: { display: true, text: unit, font: { size: 12 } },
+               ticks: { callback: v => v + ' ' + unit } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  if (canvasId === 'chart-beton') chartBeton = chart;
+  if (canvasId === 'chart-crf')   chartCRF   = chart;
+}
+
+function resetChartFilter(type) {
+  document.getElementById(`ch-${type}-od`).value = '';
+  document.getElementById(`ch-${type}-do`).value = '';
+  renderCharts();
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+updateHeaderDate();
+document.getElementById('inp-datum').value=todayStr();
+document.getElementById('bpu-datum').value=todayStr();
+document.getElementById('bpz-datum').value=todayStr();
+document.getElementById('stanje-datum').value=todayStr();
+onBPUMaterialChange();
+renderTraker();
+renderLivePreview();
+renderBPU();
+renderBPZ();
+renderOperateriGrid();
+renderCharts();
+renderWeekChart();
+renderDeviationCharts();
+document.getElementById('rastur-year').value = new Date().getFullYear();
+refreshRasturOperaterSelect();
+</script>
+</body>
+</html>
